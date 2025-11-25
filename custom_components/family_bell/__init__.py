@@ -6,7 +6,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.storage import Store
 from homeassistant.components import websocket_api
-from homeassistant.components.http import StaticPathConfig
+try:
+    from homeassistant.components.http import StaticPathConfig
+except ImportError:
+    from homeassistant.helpers.http import StaticPathConfig
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
