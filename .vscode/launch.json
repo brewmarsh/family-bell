@@ -1,0 +1,13 @@
+﻿{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Home Assistant",
+      "type": "python",
+      "request": "launch",
+      "module": "homeassistant",
+      "args": ["-c", "config"],
+      "justMyCode": false
+    }
+  ]
+}
