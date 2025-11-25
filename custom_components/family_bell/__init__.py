@@ -6,7 +6,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.storage import Store
 from homeassistant.components import websocket_api
-from homeassistant.components.http import StaticPathConfig
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
@@ -50,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # 2. Register Static Path for Frontend
     path = hass.config.path("custom_components/family_bell/frontend/family_bell_panel.js")
-    await hass.http.async_register_static_paths([StaticPathConfig(PANEL_URL, path, False)])
+    await hass.http.async_register_static_paths([{"url_path": PANEL_URL, "path": path, "cache_headers": False}])
 
     # 3. Register Sidebar Panel
     await hass.components.frontend.async_register_panel(
