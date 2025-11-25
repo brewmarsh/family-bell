@@ -1,3 +1,2 @@
 ﻿homeassistant
 colorlog
-pytest-homeassistant-custom-component
