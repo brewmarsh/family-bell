@@ -1,0 +1,7 @@
+site_name: Family Bell
+theme:
+  name: material
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Configuration: configuration.md
