@@ -14,6 +14,7 @@ class BellCard extends LitElement {
 
   render() {
     return html`
+      <link rel="stylesheet" href="/local/family_bell/src/styles/bell-card.css" />
       <div class="card bell-card ${this.bell.enabled ? "" : "disabled"}">
         <div class="bell-info">
           <div class="bell-time">${this.bell.time}</div>
@@ -50,31 +51,6 @@ class BellCard extends LitElement {
     this.hass.callWS({ type: "family_bell/delete_bell", bell_id: this.bell.id });
   }
 
-  static get styles() {
-    return css`
-      .card {
-        background: var(--card-background-color);
-        padding: 16px;
-        margin-bottom: 16px;
-        border-radius: 12px;
-        box-shadow: var(--ha-card-box-shadow, 0 2px 2px 0 rgba(0,0,0,0.14));
-        border: 1px solid var(--divider-color);
-      }
-      .bell-card { display: flex; align-items: center; justify-content: space-between; }
-      .disabled { opacity: 0.6; }
-      .bell-info { flex: 1; }
-      .bell-time { font-size: 1.2em; font-weight: bold; }
-      .bell-days { color: var(--secondary-text-color); font-size: 0.9em; margin-top: 4px;}
-      .bell-speakers { font-size: 0.8em; color: var(--secondary-text-color); margin-top: 2px; }
-      .delete-btn { background: none; border: none; cursor: pointer; font-size: 20px; }
-      .switch { position: relative; display: inline-block; width: 50px; height: 24px; }
-      .switch input { opacity: 0; width: 0; height: 0; }
-      .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-      .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-      input:checked + .slider { background-color: var(--primary-color); }
-      input:checked + .slider:before { transform: translateX(26px); }
-    `;
-  }
 }
 
 customElements.define("bell-card", BellCard);
