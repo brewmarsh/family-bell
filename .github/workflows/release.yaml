@@ -1,0 +1,57 @@
+name: Create Release PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+        - patch
+        - minor
+        - major
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Calculate new version
+        id: version
+        run: |
+          current_version=$(jq -r '.version' custom_components/family_bell/manifest.json)
+          a=( ${current_version//./ } )
+          case "${{ github.event.inputs.version_bump }}" in
+            major)
+              ((a[0]++)); a[1]=0; a[2]=0
+              ;;
+            minor)
+              ((a[1]++)); a[2]=0
+              ;;
+            patch)
+              ((a[2]++))
+              ;;
+          esac
+          new_version="${a[0]}.${a[1]}.${a[2]}"
+          echo "current_version=${current_version}" >> $GITHUB_OUTPUT
+          echo "new_version=${new_version}" >> $GITHUB_OUTPUT
+
+      - name: Update manifest.json
+        run: |
+          jq --arg new_version "${{ steps.version.outputs.new_version }}" '.version = $new_version' custom_components/family_bell/manifest.json > tmp.json && mv tmp.json custom_components/family_bell/manifest.json
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: Bump version to ${{ steps.version.outputs.new_version }}"
+          branch: "release/v${{ steps.version.outputs.new_version }}"
+          delete-branch: true
+          title: "Release v${{ steps.version.outputs.new_version }}"
+          body: "This PR bumps the version to `${{ steps.version.outputs.new_version }}` for the next release."
+          labels: "release"
+          assignees: "${{ github.actor }}"
+          reviewers: "${{ github.actor }}"
