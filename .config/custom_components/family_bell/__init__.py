@@ -22,8 +22,8 @@ PANEL_URL = "/family_bell_panel.js"
 BELL_SCHEMA = vol.Schema({
     "id": str,
     "name": str,
-    "time": str, 
-    "days": [str], 
+    "time": str,
+    "days": [str],
     "message": str,
     "enabled": bool,
     "speakers": [str]
@@ -35,17 +35,17 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Family Bell from a config entry (UI Setup)."""
-    
+
     # 1. Setup Storage
     store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
     data = await store.async_load() or {"bells": [], "vacation": {"start": None, "end": None, "enabled": False}}
-    
+
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN] = {
         "store": store,
         "data": data,
         "listeners": [],
-        "entry_id": entry.entry_id 
+        "entry_id": entry.entry_id
     }
 
     # 2. Register Static Path for Frontend
@@ -85,7 +85,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     for remove_listener in hass.data[DOMAIN]["listeners"]:
         remove_listener()
-    
+
     hass.components.frontend.async_remove_panel("family_bell")
     hass.data.pop(DOMAIN)
     return True
@@ -99,7 +99,7 @@ async def save_data(hass):
     store = hass.data[DOMAIN]["store"]
     data = hass.data[DOMAIN]["data"]
     await store.async_save(data)
-    
+
     hass.bus.async_fire("family_bell_update")
 
     entry_id = hass.data[DOMAIN]["entry_id"]
@@ -115,7 +115,7 @@ async def schedule_bells(hass, entry):
     hass.data[DOMAIN]["listeners"] = []
 
     data = hass.data[DOMAIN]["data"]
-    
+
     # Retrieve TTS Settings
     tts_provider = entry.options.get("tts_provider", entry.data.get("tts_provider"))
     tts_voice = entry.options.get("tts_voice", None)
@@ -126,7 +126,7 @@ async def schedule_bells(hass, entry):
         now_date = dt_util.now().date()
         start = datetime.datetime.strptime(data["vacation"]["start"], "%Y-%m-%d").date() if data["vacation"]["start"] else None
         end = datetime.datetime.strptime(data["vacation"]["end"], "%Y-%m-%d").date() if data["vacation"]["end"] else None
-        
+
         if start and end and start <= now_date <= end:
             return
 
@@ -139,7 +139,7 @@ async def schedule_bells(hass, entry):
         next_run = now.replace(hour=b_hour, minute=b_minute, second=0, microsecond=0)
         if next_run <= now:
             next_run += datetime.timedelta(days=1)
-        
+
         def create_callback(bell_data):
             async def fire_bell(now_time):
                 current_day = now_time.strftime("%a").lower()
@@ -176,13 +176,13 @@ async def ws_get_data(hass, connection, msg):
 async def ws_update_bell(hass, connection, msg):
     bells = hass.data[DOMAIN]["data"]["bells"]
     new_bell = msg["bell"]
-    
+
     existing = next((i for i, b in enumerate(bells) if b["id"] == new_bell["id"]), None)
     if existing is not None:
         bells[existing] = new_bell
     else:
         bells.append(new_bell)
-        
+
     await save_data(hass)
     connection.send_result(msg["id"], {"success": True})
 
