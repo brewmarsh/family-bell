@@ -6,66 +6,80 @@
 
 **Family Bell** is a custom integration that brings the functionality of Google's "Family Bell" directly into Home Assistant. It allows you to schedule recurring announcements on your smart speakers without relying on cloud schedules or specific hardware ecosystems.
 
+For full documentation, please visit [our documentation site](https://brewmarsh.github.io/family-bell/).
+
 ![Family Bell Panel](images/screenshot.png)
-*(Note: If you don't have a screenshot yet, you can remove this line until you add one)*
 
-## ✨ Features
+## Table of Contents
 
-* **📅 Custom Schedules:** Create recurring bells (e.g., "School Starts", "Lunch Time") on specific days of the week.
-* **📢 Multi-Speaker Support:** targeted announcements to specific media players (Sonos, Google Cast, Alexa via Nabu Casa, etc.).
-* **🌴 Vacation Mode:** Easily pause all bells during specific date ranges (Spring Break, Holidays) without deleting them.
-* **🗣️ Flexible TTS:** Works with **any** Text-to-Speech engine configured in Home Assistant (Google Translate, Nabu Casa Cloud, Piper, MaryTTS).
-* **💻 Native UI Panel:** Includes a dedicated sidebar panel for easy management—no YAML editing required!
+*   [Key Features](#key-features-)
+*   [Installation](#installation-️)
+*   [Configuration](#configuration-⚙️)
+*   [Web UI](#web-ui-)
+*   [Services & Controls](#services--controls-)
+*   [Automation Examples](#automation-examples-)
+*   [How to Contribute](#how-to-contribute-)
 
-## 📥 Installation
+## Key Features ✨
 
-### Option 1: HACS (Recommended)
-1.  Click the "Open in HACS" badge above **OR** go to HACS > Integrations > 3 dots > **Custom Repositories**.
-2.  Add `https://github.com/brewmarsh/family-bell` as a **Integration**.
-3.  Click **Download**.
-4.  Restart Home Assistant.
+*   **📅 Custom Schedules:** Create recurring bells (e.g., "School Starts", "Lunch Time") on specific days of the week.
+*   **📢 Multi-Speaker Support:** targeted announcements to specific media players (Sonos, Google Cast, Alexa via Nabu Casa, etc.).
+*   **🌴 Vacation Mode:** Easily pause all bells during specific date ranges (Spring Break, Holidays) without deleting them.
+*   **🗣️ Flexible TTS:** Works with **any** Text-to-Speech engine configured in Home Assistant (Google Translate, Nabu Casa Cloud, Piper, MaryTTS).
+*   **💻 Native UI Panel:** Includes a dedicated sidebar panel for easy management—no YAML editing required!
 
-### Option 2: Manual Installation
-1.  Download the latest release.
-2.  Copy the `custom_components/family_bell` folder into your Home Assistant's `config/custom_components/` directory.
-3.  Restart Home Assistant.
+## Installation 🛠️
 
-## ⚙️ Configuration
+For detailed installation instructions, please see the [Installation page](docs/installation.md) in our documentation.
 
-1.  Navigate to **Settings** > **Devices & Services**.
-2.  Click **+ ADD INTEGRATION**.
-3.  Search for **Family Bell**.
-4.  **Setup Wizard:**
-    * **TTS Provider:** Select your preferred speech engine (e.g., `tts.google_en_com` or `tts.piper`).
-    * **Voice/Language:** (Optional) Customize the specific voice ID or language.
+1.  **HACS (Recommended):** Install via HACS and restart Home Assistant.
+2.  **Manual:** Copy `custom_components/family_bell` to your `custom_components` directory and restart.
 
-*Note: You can change the TTS settings later by clicking "Configure" on the integration entry.*
+## Configuration ⚙️
 
-## 🚀 Usage
+Configuration is done via the UI. For a complete guide, please see the [Configuration page](docs/configuration.md) in our documentation.
 
-1.  After installation, look for the **Family Bell** item in your sidebar.
-2.  **Add a Bell:**
-    * Pick a time.
-    * Type a message (e.g., "Time to get your shoes on!").
-    * Tap the days of the week to repeat (Mon-Sun).
-    * Select the speakers you want to announce on.
-    * Click **Save Bell**.
-3.  **Vacation Mode:**
-    * Toggle "Vacation Mode" ON.
-    * Select a Start Date and End Date.
-    * All bells will be suppressed during this window.
+1.  Go to **Settings > Devices & Services**.
+2.  Click **+ Add Integration** and search for "Family Bell".
+3.  Follow the on-screen prompts to select your TTS provider.
 
-## ❓ FAQ
+## Web UI 🖼️
 
-**Q: Does this work if my internet is down?**
-A: Yes! If you use a local TTS engine (like Piper) and local media players, this runs 100% locally.
+This integration provides a custom panel to manage your bells. The panel is automatically added to your Home Assistant sidebar when you install the integration.
 
-**Q: Can I play a sound effect before the text?**
-A: Currently, it speaks the text immediately. Sound effect support (chimes) is planned for a future release.
+The Web UI provides a comprehensive overview of your bells, including:
+*   A list of all your bells.
+*   The ability to add, edit, and delete bells.
+*   A vacation mode to temporarily disable all bells.
+
+## Services & Controls 🎛️
+
+The following services are available:
+
+*   `family_bell.add_bell`: Add a new bell.
+*   `family_bell.delete_bell`: Delete a bell.
+*   `family_bell.set_vacation_mode`: Enable or disable vacation mode.
+
+## Automation Examples 🚀
+
+### Enable vacation mode when away
+
+```yaml
+automation:
+  - alias: "Enable vacation mode when away"
+    trigger:
+      - platform: state
+        entity_id: group.all_people
+        to: "not_home"
+    action:
+      - service: family_bell.set_vacation_mode
+        data:
+          enabled: true
+```
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please see our [Contributing Guide](CONTRIBUTING.md) for more details.
 
 ## 📄 License
 
