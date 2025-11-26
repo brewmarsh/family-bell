@@ -4,9 +4,9 @@ import {
   css,
 } from "https://unpkg.com/lit-element@2.4.0/lit-element.js?module";
 
-import "./vacation-card.js";
-import "./bell-card.js";
-import "./add-bell-card.js";
+import "./components/vacation-card.js";
+import "./components/bell-card.js";
+import "./components/add-bell-card.js";
 
 class FamilyBellPanel extends LitElement {
   static get properties() {
