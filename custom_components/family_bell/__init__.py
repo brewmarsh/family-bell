@@ -1,3 +1,4 @@
+"""The Family Bell integration."""
 import logging
 import datetime
 import voluptuous as vol
@@ -6,6 +7,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.storage import Store
 from homeassistant.components import websocket_api
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
@@ -48,8 +50,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     }
 
     # 2. Register Static Path for Frontend
-    path = hass.config.path("custom_components/family_bell/frontend/family_bell_panel.js")
-    await hass.http.async_register_static_paths([{"url_path": PANEL_URL, "path": path, "cache_headers": False}])
+    path = hass.config.path("custom_components/family_bell/frontend/dist/family_bell_panel.js")
+    await hass.http.async_register_static_paths([StaticPathConfig(PANEL_URL, path, False)])
 
     # 3. Register Sidebar Panel
     await hass.components.frontend.async_register_panel(
@@ -99,6 +101,8 @@ async def save_data(hass):
     data = hass.data[DOMAIN]["data"]
     await store.async_save(data)
     
+    hass.bus.async_fire("family_bell_update")
+
     entry_id = hass.data[DOMAIN]["entry_id"]
     entry = hass.config_entries.async_get_entry(entry_id)
     await schedule_bells(hass, entry)
