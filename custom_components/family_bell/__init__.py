@@ -2,7 +2,7 @@ import logging
 import datetime
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.storage import Store
 from homeassistant.components import websocket_api
@@ -69,8 +69,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.components.websocket_api.async_register_command(hass, ws_update_bell)
         hass.components.websocket_api.async_register_command(hass, ws_delete_bell)
         hass.components.websocket_api.async_register_command(hass, ws_update_vacation)
-    except:
-        pass # Already registered
+    except Exception:
+        pass  # Already registered
 
     # 5. Start Scheduler
     await schedule_bells(hass, entry)

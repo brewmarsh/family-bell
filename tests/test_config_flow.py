@@ -1,6 +1,6 @@
 """Test the Family Bell config flow."""
 from unittest.mock import patch
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from custom_components.family_bell.const import DOMAIN
 
 async def test_form(hass):
