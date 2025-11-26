@@ -49,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # 2. Register Static Path for Frontend
     path = hass.config.path("custom_components/family_bell/frontend/family_bell_panel.js")
-    hass.http.register_static_path(PANEL_URL, path)
+    await hass.http.async_register_static_paths([{"url_path": PANEL_URL, "path": path, "cache_headers": False}])
 
     # 3. Register Sidebar Panel
     await hass.components.frontend.async_register_panel(

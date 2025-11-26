@@ -9,7 +9,7 @@ async def test_form(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     # Simulate User Input (Selecting Google TTS)
     with patch(
