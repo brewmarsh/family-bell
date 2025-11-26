@@ -1,11 +1,8 @@
 # ruff.toml
-[lint]
-# Same as Black.
 line-length = 79
-
-# Assume Python 3.12
 target-version = "py312"
 
+[lint]
 # Rules disabled by default, but recommended.
 # See: https://docs.astral.sh/ruff/rules/#rules-recommended-for-use
 # extend-select = [
