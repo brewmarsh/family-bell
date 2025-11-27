@@ -3,6 +3,7 @@ import {
   html,
   css,
 } from "https://unpkg.com/lit-element@2.4.0/lit-element.js?module";
+import "./bell-tts-selector.js";
 
 class FamilyBellPanel extends LitElement {
   static get properties() {
@@ -12,6 +13,8 @@ class FamilyBellPanel extends LitElement {
       vacation: { type: Object },
       _newDays: { type: Array },
       _newSpeakers: { type: Array },
+      _newTTS: { type: Object },
+      _globalTTS: { type: Object },
     };
   }
 
@@ -21,6 +24,8 @@ class FamilyBellPanel extends LitElement {
     this.vacation = { enabled: false, start: "", end: "" };
     this._newDays = [];
     this._newSpeakers = [];
+    this._newTTS = { provider: "", voice: "", language: "" };
+    this._globalTTS = {};
   }
 
   firstUpdated() {
@@ -31,6 +36,13 @@ class FamilyBellPanel extends LitElement {
     this.hass.callWS({ type: "family_bell/get_data" }).then((data) => {
       this.bells = data.bells;
       this.vacation = data.vacation;
+      if (data.global_tts) {
+        this._globalTTS = data.global_tts;
+        // Set default for new bell if not set
+        if (!this._newTTS.provider) {
+           this._newTTS = { ...data.global_tts };
+        }
+      }
       this.requestUpdate();
     });
   }
@@ -102,6 +114,15 @@ class FamilyBellPanel extends LitElement {
             <input id="newTime" type="time" class="time-input" />
             <input id="newMsg" type="text" placeholder="What should I say?" class="msg-input" />
           </div>
+
+          <div class="section-label">TTS Settings:</div>
+          <bell-tts-selector
+            .hass=${this.hass}
+            .provider=${this._newTTS.provider}
+            .voice=${this._newTTS.voice}
+            .language=${this._newTTS.language}
+            @change=${this._handleTTSChange}
+          ></bell-tts-selector>
 
           <div class="section-label">Days to Repeat:</div>
           <div class="day-selector">
@@ -195,6 +216,11 @@ class FamilyBellPanel extends LitElement {
     this.hass.callWS({ type: "family_bell/vacation", vacation: this.vacation });
   }
 
+  _handleTTSChange(e) {
+    this._newTTS = { ...this._newTTS, ...e.detail };
+    this.requestUpdate();
+  }
+
   addBell() {
     const time = this.shadowRoot.getElementById("newTime").value;
     const msg = this.shadowRoot.getElementById("newMsg").value;
@@ -212,6 +238,9 @@ class FamilyBellPanel extends LitElement {
       days: this._newDays,
       speakers: this._newSpeakers,
       enabled: true,
+      tts_provider: this._newTTS.provider,
+      tts_voice: this._newTTS.voice,
+      tts_language: this._newTTS.language,
     };
 
     this.hass.callWS({ type: "family_bell/update_bell", bell: newBell }).then(() => {
@@ -219,6 +248,8 @@ class FamilyBellPanel extends LitElement {
       this.shadowRoot.getElementById("newMsg").value = "";
       this._newDays = [];
       this._newSpeakers = [];
+      // Reset TTS to global default
+      this._newTTS = { ...this._globalTTS };
       this.shadowRoot.querySelectorAll('.speaker-list input').forEach(el => el.checked = false);
       this.requestUpdate();
     });
