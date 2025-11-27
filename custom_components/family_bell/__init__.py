@@ -6,6 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.storage import Store
 from homeassistant.components import websocket_api
+
 try:
     from homeassistant.components.websocket_api import async_register_command
 except ImportError:
@@ -87,7 +88,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         await hass.http.async_register_static_paths(
             [
                 StaticPathConfig(PANEL_URL, path, False),
-                StaticPathConfig("/bell-tts-selector.js", selector_path, False),
+                StaticPathConfig(
+                    "/bell-tts-selector.js", selector_path, False
+                ),
             ]
         )
     else:
@@ -133,10 +136,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             async_register_command(hass, ws_delete_bell)
             async_register_command(hass, ws_update_vacation)
         else:
-            hass.components.websocket_api.async_register_command(hass, ws_get_data)
-            hass.components.websocket_api.async_register_command(hass, ws_update_bell)
-            hass.components.websocket_api.async_register_command(hass, ws_delete_bell)
-            hass.components.websocket_api.async_register_command(hass, ws_update_vacation)
+            hass.components.websocket_api.async_register_command(
+                hass, ws_get_data
+            )
+            hass.components.websocket_api.async_register_command(
+                hass, ws_update_bell
+            )
+            hass.components.websocket_api.async_register_command(
+                hass, ws_delete_bell
+            )
+            hass.components.websocket_api.async_register_command(
+                hass, ws_update_vacation
+            )
     except Exception:
         pass  # Already registered
 
