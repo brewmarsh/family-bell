@@ -1,7 +1,9 @@
 """Test the Family Bell config flow."""
+
 from unittest.mock import patch
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from custom_components.family_bell.const import DOMAIN
+
 
 async def test_form(hass):
     """Test we get the form."""
@@ -21,7 +23,7 @@ async def test_form(hass):
             {
                 "tts_provider": "tts.google_en_com",
                 "tts_voice": "",
-                "tts_language": "en"
+                "tts_language": "en",
             },
         )
         await hass.async_block_till_done()
@@ -31,6 +33,6 @@ async def test_form(hass):
     assert result2["data"] == {
         "tts_provider": "tts.google_en_com",
         "tts_voice": "",
-        "tts_language": "en"
+        "tts_language": "en",
     }
     assert len(mock_setup_entry.mock_calls) == 1

@@ -1,0 +1,36 @@
+# ruff.toml
+line-length = 79
+target-version = "py312"
+
+[lint]
+# Rules disabled by default, but recommended.
+# See: https://docs.astral.sh/ruff/rules/#rules-recommended-for-use
+# extend-select = [
+#   "I", # isort
+#   "N", # pep8-naming
+#   "UP", # pyupgrade
+#   "RUF", # ruff specific rules
+# ]
+
+# Disable rules, that may be too opinionated for some users
+# ignore = [
+#     # opinionated style enforced by black
+#     "COM812", "COM819", "D203", "D213", "E111", "E114", "E117", "ISC001", "ISC002", "Q000", "Q001", "Q002", "Q003", "W191",
+#     # Ignore long lines, we let black handle that
+#     "E501",
+#     # Allow non-abstract empty methods in abstract base classes
+#     "B027",
+#     # Allow boolean positional values in function calls
+#     "FBT003",
+#     # Ignore checks for possible security issues
+#     "S",
+#     # Ignore complexity
+#     "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
+# ]
+
+[lint.per-file-ignores]
+"__init__.py" = ["E402"]
+"tests/*" = ["S101"]
+
+[lint.isort]
+known-first-party = ["custom_components.family_bell"]

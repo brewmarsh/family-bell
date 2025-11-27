@@ -2,7 +2,7 @@ import logging
 import datetime
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.storage import Store
 from homeassistant.components import websocket_api
@@ -18,38 +18,49 @@ STORAGE_VERSION = 1
 PANEL_URL = "/family_bell_panel.js"
 
 # Schema for a single bell
-BELL_SCHEMA = vol.Schema({
-    "id": str,
-    "name": str,
-    "time": str, 
-    "days": [str], 
-    "message": str,
-    "enabled": bool,
-    "speakers": [str]
-})
+BELL_SCHEMA = vol.Schema(
+    {
+        "id": str,
+        "name": str,
+        "time": str,
+        "days": [str],
+        "message": str,
+        "enabled": bool,
+        "speakers": [str],
+    }
+)
+
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Family Bell component (YAML fallback)."""
     return True
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Family Bell from a config entry (UI Setup)."""
-    
+
     # 1. Setup Storage
     store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
-    data = await store.async_load() or {"bells": [], "vacation": {"start": None, "end": None, "enabled": False}}
-    
+    data = await store.async_load() or {
+        "bells": [],
+        "vacation": {"start": None, "end": None, "enabled": False},
+    }
+
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN] = {
         "store": store,
         "data": data,
         "listeners": [],
-        "entry_id": entry.entry_id 
+        "entry_id": entry.entry_id,
     }
 
     # 2. Register Static Path for Frontend
-    path = hass.config.path("custom_components/family_bell/frontend/family_bell_panel.js")
-    await hass.http.async_register_static_paths([{"url_path": PANEL_URL, "path": path, "cache_headers": False}])
+    path = hass.config.path(
+        "custom_components/family_bell/frontend/family_bell_panel.js"
+    )
+    await hass.http.async_register_static_paths(
+        [{"url_path": PANEL_URL, "path": path, "cache_headers": False}]
+    )
 
     # 3. Register Sidebar Panel
     await hass.components.frontend.async_register_panel(
@@ -60,17 +71,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         url_path="family-bell",
         module_url=PANEL_URL,
         embed_iframe=False,
-        require_admin=True
+        require_admin=True,
     )
 
     # 4. Register Websocket Commands
     try:
         hass.components.websocket_api.async_register_command(hass, ws_get_data)
-        hass.components.websocket_api.async_register_command(hass, ws_update_bell)
-        hass.components.websocket_api.async_register_command(hass, ws_delete_bell)
-        hass.components.websocket_api.async_register_command(hass, ws_update_vacation)
-    except:
-        pass # Already registered
+        hass.components.websocket_api.async_register_command(
+            hass, ws_update_bell
+        )
+        hass.components.websocket_api.async_register_command(
+            hass, ws_delete_bell
+        )
+        hass.components.websocket_api.async_register_command(
+            hass, ws_update_vacation
+        )
+    except Exception:
+        pass  # Already registered
 
     # 5. Start Scheduler
     await schedule_bells(hass, entry)
@@ -80,30 +97,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     return True
 
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     for remove_listener in hass.data[DOMAIN]["listeners"]:
         remove_listener()
-    
+
     hass.components.frontend.async_remove_panel("family_bell")
     hass.data.pop(DOMAIN)
     return True
 
+
 async def update_listener(hass, entry):
     """Handle options update."""
     await schedule_bells(hass, entry)
+
 
 async def save_data(hass):
     """Save data to storage."""
     store = hass.data[DOMAIN]["store"]
     data = hass.data[DOMAIN]["data"]
     await store.async_save(data)
-    
+
     entry_id = hass.data[DOMAIN]["entry_id"]
     entry = hass.config_entries.async_get_entry(entry_id)
     await schedule_bells(hass, entry)
 
+
 # --- Scheduler Logic ---
+
 
 async def schedule_bells(hass, entry):
     """Cancel old listeners and schedule next bells using Options for TTS."""
@@ -112,18 +134,32 @@ async def schedule_bells(hass, entry):
     hass.data[DOMAIN]["listeners"] = []
 
     data = hass.data[DOMAIN]["data"]
-    
+
     # Retrieve TTS Settings
-    tts_provider = entry.options.get("tts_provider", entry.data.get("tts_provider"))
+    tts_provider = entry.options.get(
+        "tts_provider", entry.data.get("tts_provider")
+    )
     tts_voice = entry.options.get("tts_voice", None)
     tts_lang = entry.options.get("tts_language", "en")
 
     # Check Vacation Mode
     if data["vacation"]["enabled"]:
         now_date = dt_util.now().date()
-        start = datetime.datetime.strptime(data["vacation"]["start"], "%Y-%m-%d").date() if data["vacation"]["start"] else None
-        end = datetime.datetime.strptime(data["vacation"]["end"], "%Y-%m-%d").date() if data["vacation"]["end"] else None
-        
+        start = (
+            datetime.datetime.strptime(
+                data["vacation"]["start"], "%Y-%m-%d"
+            ).date()
+            if data["vacation"]["start"]
+            else None
+        )
+        end = (
+            datetime.datetime.strptime(
+                data["vacation"]["end"], "%Y-%m-%d"
+            ).date()
+            if data["vacation"]["end"]
+            else None
+        )
+
         if start and end and start <= now_date <= end:
             return
 
@@ -133,10 +169,12 @@ async def schedule_bells(hass, entry):
             continue
 
         b_hour, b_minute = map(int, bell["time"].split(":"))
-        next_run = now.replace(hour=b_hour, minute=b_minute, second=0, microsecond=0)
+        next_run = now.replace(
+            hour=b_hour, minute=b_minute, second=0, microsecond=0
+        )
         if next_run <= now:
             next_run += datetime.timedelta(days=1)
-        
+
         def create_callback(bell_data):
             async def fire_bell(now_time):
                 current_day = now_time.strftime("%a").lower()
@@ -145,59 +183,81 @@ async def schedule_bells(hass, entry):
                         "entity_id": tts_provider,
                         "message": bell_data["message"],
                         "language": tts_lang,
-                        "media_player_entity_id": bell_data["speakers"]
+                        "media_player_entity_id": bell_data["speakers"],
                     }
                     if tts_voice:
                         service_data["options"] = {"voice": tts_voice}
 
-                    await hass.services.async_call("tts", "speak", service_data)
+                    await hass.services.async_call(
+                        "tts", "speak", service_data
+                    )
 
                 await schedule_bells(hass, entry)
+
             return fire_bell
 
-        listener = async_track_point_in_utc_time(hass, create_callback(bell), next_run)
+        listener = async_track_point_in_utc_time(
+            hass, create_callback(bell), next_run
+        )
         hass.data[DOMAIN]["listeners"].append(listener)
+
 
 # --- WebSocket Handlers ---
 
-@websocket_api.websocket_command({vol.Required("type"): "family_bell/get_data"})
+
+@websocket_api.websocket_command(
+    {vol.Required("type"): "family_bell/get_data"}
+)
 @websocket_api.async_response
 async def ws_get_data(hass, connection, msg):
     connection.send_result(msg["id"], hass.data[DOMAIN]["data"])
 
-@websocket_api.websocket_command({
-    vol.Required("type"): "family_bell/update_bell",
-    vol.Required("bell"): BELL_SCHEMA
-})
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "family_bell/update_bell",
+        vol.Required("bell"): BELL_SCHEMA,
+    }
+)
 @websocket_api.async_response
 async def ws_update_bell(hass, connection, msg):
     bells = hass.data[DOMAIN]["data"]["bells"]
     new_bell = msg["bell"]
-    
-    existing = next((i for i, b in enumerate(bells) if b["id"] == new_bell["id"]), None)
+
+    existing = next(
+        (i for i, b in enumerate(bells) if b["id"] == new_bell["id"]), None
+    )
     if existing is not None:
         bells[existing] = new_bell
     else:
         bells.append(new_bell)
-        
+
     await save_data(hass)
     connection.send_result(msg["id"], {"success": True})
 
-@websocket_api.websocket_command({
-    vol.Required("type"): "family_bell/delete_bell",
-    vol.Required("bell_id"): str
-})
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "family_bell/delete_bell",
+        vol.Required("bell_id"): str,
+    }
+)
 @websocket_api.async_response
 async def ws_delete_bell(hass, connection, msg):
     bells = hass.data[DOMAIN]["data"]["bells"]
-    hass.data[DOMAIN]["data"]["bells"] = [b for b in bells if b["id"] != msg["bell_id"]]
+    hass.data[DOMAIN]["data"]["bells"] = [
+        b for b in bells if b["id"] != msg["bell_id"]
+    ]
     await save_data(hass)
     connection.send_result(msg["id"], {"success": True})
 
-@websocket_api.websocket_command({
-    vol.Required("type"): "family_bell/vacation",
-    vol.Required("vacation"): dict
-})
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "family_bell/vacation",
+        vol.Required("vacation"): dict,
+    }
+)
 @websocket_api.async_response
 async def ws_update_vacation(hass, connection, msg):
     hass.data[DOMAIN]["data"]["vacation"] = msg["vacation"]
