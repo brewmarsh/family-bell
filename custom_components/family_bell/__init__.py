@@ -6,6 +6,25 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.storage import Store
 from homeassistant.components import websocket_api
+
+try:
+    from homeassistant.components.websocket_api import async_register_command
+except ImportError:
+    async_register_command = None
+
+try:
+    from homeassistant.components.http import StaticPathConfig
+except ImportError:
+    StaticPathConfig = None
+
+try:
+    from homeassistant.components.frontend import (
+        async_register_built_in_panel,
+        async_remove_panel,
+    )
+except ImportError:
+    async_register_built_in_panel = None
+    async_remove_panel = None
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
@@ -27,6 +46,9 @@ BELL_SCHEMA = vol.Schema(
         "message": str,
         "enabled": bool,
         "speakers": [str],
+        vol.Optional("tts_provider"): vol.Any(str, None),
+        vol.Optional("tts_voice"): vol.Any(str, None),
+        vol.Optional("tts_language"): vol.Any(str, None),
     }
 )
 
@@ -58,34 +80,74 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     path = hass.config.path(
         "custom_components/family_bell/frontend/family_bell_panel.js"
     )
-    await hass.http.async_register_static_paths(
-        [{"url_path": PANEL_URL, "path": path, "cache_headers": False}]
+    selector_path = hass.config.path(
+        "custom_components/family_bell/frontend/bell-tts-selector.js"
     )
 
+    if StaticPathConfig:
+        await hass.http.async_register_static_paths(
+            [
+                StaticPathConfig(PANEL_URL, path, False),
+                StaticPathConfig(
+                    "/bell-tts-selector.js", selector_path, False
+                ),
+            ]
+        )
+    else:
+        await hass.http.async_register_static_paths(
+            [
+                {"url_path": PANEL_URL, "path": path, "cache_headers": False},
+                {
+                    "url_path": "/bell-tts-selector.js",
+                    "path": selector_path,
+                    "cache_headers": False,
+                },
+            ]
+        )
+
     # 3. Register Sidebar Panel
-    await hass.components.frontend.async_register_panel(
-        "family_bell",
-        "Family Bell",
-        "mdi:school-bell",
-        "family_bell",
-        url_path="family-bell",
-        module_url=PANEL_URL,
-        embed_iframe=False,
-        require_admin=True,
-    )
+    if async_register_built_in_panel:
+        async_register_built_in_panel(
+            hass,
+            "family_bell",
+            "Family Bell",
+            "mdi:school-bell",
+            "family-bell",
+            config={"module_url": PANEL_URL, "embed_iframe": False},
+            require_admin=True,
+        )
+    else:
+        await hass.components.frontend.async_register_panel(
+            "family_bell",
+            "Family Bell",
+            "mdi:school-bell",
+            "family_bell",
+            url_path="family-bell",
+            module_url=PANEL_URL,
+            embed_iframe=False,
+            require_admin=True,
+        )
 
     # 4. Register Websocket Commands
     try:
-        hass.components.websocket_api.async_register_command(hass, ws_get_data)
-        hass.components.websocket_api.async_register_command(
-            hass, ws_update_bell
-        )
-        hass.components.websocket_api.async_register_command(
-            hass, ws_delete_bell
-        )
-        hass.components.websocket_api.async_register_command(
-            hass, ws_update_vacation
-        )
+        if async_register_command:
+            async_register_command(hass, ws_get_data)
+            async_register_command(hass, ws_update_bell)
+            async_register_command(hass, ws_delete_bell)
+            async_register_command(hass, ws_update_vacation)
+        else:
+            hass.components.websocket_api.async_register_command(
+                hass, ws_get_data
+            )
+            hass.components.websocket_api.async_register_command(
+                hass, ws_update_bell
+            )
+            hass.components.websocket_api.async_register_command(
+                hass, ws_delete_bell
+            )
+            hass.components.websocket_api.async_register_command(
+                hass, ws_update_vacation
+            )
     except Exception:
         pass  # Already registered
 
@@ -103,7 +165,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     for remove_listener in hass.data[DOMAIN]["listeners"]:
         remove_listener()
 
-    hass.components.frontend.async_remove_panel("family_bell")
+    if async_remove_panel:
+        async_remove_panel(hass, "family_bell")
+    else:
+        hass.components.frontend.async_remove_panel("family_bell")
+
     hass.data.pop(DOMAIN)
     return True
 
@@ -179,14 +245,19 @@ async def schedule_bells(hass, entry):
             async def fire_bell(now_time):
                 current_day = now_time.strftime("%a").lower()
                 if current_day in bell_data["days"]:
+                    # Use bell specific TTS if set, else global
+                    provider = bell_data.get("tts_provider") or tts_provider
+                    voice = bell_data.get("tts_voice") or tts_voice
+                    lang = bell_data.get("tts_language") or tts_lang
+
                     service_data = {
-                        "entity_id": tts_provider,
+                        "entity_id": provider,
                         "message": bell_data["message"],
-                        "language": tts_lang,
+                        "language": lang,
                         "media_player_entity_id": bell_data["speakers"],
                     }
-                    if tts_voice:
-                        service_data["options"] = {"voice": tts_voice}
+                    if voice:
+                        service_data["options"] = {"voice": voice}
 
                     await hass.services.async_call(
                         "tts", "speak", service_data
@@ -210,7 +281,21 @@ async def schedule_bells(hass, entry):
 )
 @websocket_api.async_response
 async def ws_get_data(hass, connection, msg):
-    connection.send_result(msg["id"], hass.data[DOMAIN]["data"])
+    data = hass.data[DOMAIN]["data"]
+
+    # Inject global TTS settings for frontend default
+    entry_id = hass.data[DOMAIN]["entry_id"]
+    entry = hass.config_entries.async_get_entry(entry_id)
+    if entry:
+        data["global_tts"] = {
+            "provider": entry.options.get(
+                "tts_provider", entry.data.get("tts_provider")
+            ),
+            "voice": entry.options.get("tts_voice"),
+            "language": entry.options.get("tts_language", "en"),
+        }
+
+    connection.send_result(msg["id"], data)
 
 
 @websocket_api.websocket_command(
