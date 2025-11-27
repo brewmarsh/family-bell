@@ -6,12 +6,24 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.storage import Store
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api import async_register_command
-from homeassistant.components.http import StaticPathConfig
-from homeassistant.components.frontend import (
-    async_register_built_in_panel,
-    async_remove_panel,
-)
+try:
+    from homeassistant.components.websocket_api import async_register_command
+except ImportError:
+    async_register_command = None
+
+try:
+    from homeassistant.components.http import StaticPathConfig
+except ImportError:
+    StaticPathConfig = None
+
+try:
+    from homeassistant.components.frontend import (
+        async_register_built_in_panel,
+        async_remove_panel,
+    )
+except ImportError:
+    async_register_built_in_panel = None
+    async_remove_panel = None
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
@@ -70,30 +82,61 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     selector_path = hass.config.path(
         "custom_components/family_bell/frontend/bell-tts-selector.js"
     )
-    await hass.http.async_register_static_paths(
-        [
-            StaticPathConfig(PANEL_URL, path, False),
-            StaticPathConfig("/bell-tts-selector.js", selector_path, False),
-        ]
-    )
+
+    if StaticPathConfig:
+        await hass.http.async_register_static_paths(
+            [
+                StaticPathConfig(PANEL_URL, path, False),
+                StaticPathConfig("/bell-tts-selector.js", selector_path, False),
+            ]
+        )
+    else:
+        await hass.http.async_register_static_paths(
+            [
+                {"url_path": PANEL_URL, "path": path, "cache_headers": False},
+                {
+                    "url_path": "/bell-tts-selector.js",
+                    "path": selector_path,
+                    "cache_headers": False,
+                },
+            ]
+        )
 
     # 3. Register Sidebar Panel
-    async_register_built_in_panel(
-        hass,
-        "family_bell",
-        "Family Bell",
-        "mdi:school-bell",
-        "family-bell",
-        config={"module_url": PANEL_URL, "embed_iframe": False},
-        require_admin=True,
-    )
+    if async_register_built_in_panel:
+        async_register_built_in_panel(
+            hass,
+            "family_bell",
+            "Family Bell",
+            "mdi:school-bell",
+            "family-bell",
+            config={"module_url": PANEL_URL, "embed_iframe": False},
+            require_admin=True,
+        )
+    else:
+        await hass.components.frontend.async_register_panel(
+            "family_bell",
+            "Family Bell",
+            "mdi:school-bell",
+            "family_bell",
+            url_path="family-bell",
+            module_url=PANEL_URL,
+            embed_iframe=False,
+            require_admin=True,
+        )
 
     # 4. Register Websocket Commands
     try:
-        async_register_command(hass, ws_get_data)
-        async_register_command(hass, ws_update_bell)
-        async_register_command(hass, ws_delete_bell)
-        async_register_command(hass, ws_update_vacation)
+        if async_register_command:
+            async_register_command(hass, ws_get_data)
+            async_register_command(hass, ws_update_bell)
+            async_register_command(hass, ws_delete_bell)
+            async_register_command(hass, ws_update_vacation)
+        else:
+            hass.components.websocket_api.async_register_command(hass, ws_get_data)
+            hass.components.websocket_api.async_register_command(hass, ws_update_bell)
+            hass.components.websocket_api.async_register_command(hass, ws_delete_bell)
+            hass.components.websocket_api.async_register_command(hass, ws_update_vacation)
     except Exception:
         pass  # Already registered
 
@@ -111,7 +154,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     for remove_listener in hass.data[DOMAIN]["listeners"]:
         remove_listener()
 
-    async_remove_panel(hass, "family_bell")
+    if async_remove_panel:
+        async_remove_panel(hass, "family_bell")
+    else:
+        hass.components.frontend.async_remove_panel("family_bell")
+
     hass.data.pop(DOMAIN)
     return True
 
