@@ -63,7 +63,7 @@ async def test_options_flow(hass):
     with patch(
         "custom_components.family_bell.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ):
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
