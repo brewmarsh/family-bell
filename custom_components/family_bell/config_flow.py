@@ -44,7 +44,7 @@ class FamilyBellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
-        return FamilyBellOptionsFlowHandler(config_entry)
+        return FamilyBellOptionsFlowHandler()
 
 
 class FamilyBellOptionsFlowHandler(config_entries.OptionsFlow):
