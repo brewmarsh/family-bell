@@ -81,37 +81,43 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         "custom_components/family_bell/frontend/src/family_bell_panel.js"
     )
 
-    if StaticPathConfig:
-        await hass.http.async_register_static_paths(
-            [StaticPathConfig(PANEL_URL, path, False)]
-        )
-    else:
-        await hass.http.async_register_static_paths(
-            [{"url_path": PANEL_URL, "path": path, "cache_headers": False}]
-        )
+    try:
+        if StaticPathConfig:
+            await hass.http.async_register_static_paths(
+                [StaticPathConfig(PANEL_URL, path, False)]
+            )
+        else:
+            await hass.http.async_register_static_paths(
+                [{"url_path": PANEL_URL, "path": path, "cache_headers": False}]
+            )
+    except RuntimeError:
+        _LOGGER.debug("Static path %s already registered", PANEL_URL)
 
     # 3. Register Sidebar Panel
-    if async_register_built_in_panel:
-        async_register_built_in_panel(
-            hass,
-            "family_bell",
-            "Family Bell 🔔",
-            "mdi:school-bell",
-            "family-bell",
-            config={"module_url": PANEL_URL, "embed_iframe": False},
-            require_admin=True,
-        )
-    else:
-        await hass.components.frontend.async_register_panel(
-            "family_bell",
-            "Family Bell 🔔",
-            "mdi:school-bell",
-            "family_bell",
-            url_path="family-bell",
-            module_url=PANEL_URL,
-            embed_iframe=False,
-            require_admin=True,
-        )
+    try:
+        if async_register_built_in_panel:
+            async_register_built_in_panel(
+                hass,
+                "family_bell",
+                "Family Bell 🔔",
+                "mdi:school-bell",
+                "family-bell",
+                config={"module_url": PANEL_URL, "embed_iframe": False},
+                require_admin=True,
+            )
+        else:
+            await hass.components.frontend.async_register_panel(
+                "family_bell",
+                "Family Bell 🔔",
+                "mdi:school-bell",
+                "family_bell",
+                url_path="family-bell",
+                module_url=PANEL_URL,
+                embed_iframe=False,
+                require_admin=True,
+            )
+    except ValueError:
+        _LOGGER.debug("Panel family_bell already registered")
 
     # 4. Register Websocket Commands
     try:
