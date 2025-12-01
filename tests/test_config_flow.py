@@ -54,7 +54,9 @@ async def test_options_flow(hass):
     config_entry.add_to_hass(hass)
 
     # Initialize options flow
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id
+    )
 
     assert result["type"] == "form"
     assert result["step_id"] == "init"
