@@ -1,0 +1,12 @@
+{
+  "domain": "family_bell",
+  "name": "Family Bell",
+  "version": "1.1.0",
+  "documentation": "https://github.com/yourname/family_bell",
+  "issue_tracker": "https://github.com/yourname/family_bell/issues",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [],
+  "iot_class": "local_push",
+  "config_flow": true
+}

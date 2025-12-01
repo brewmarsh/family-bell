@@ -77,32 +77,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     }
 
     # 2. Register Static Path for Frontend
-    path = hass.config.path(
-        "custom_components/family_bell/frontend/family_bell_panel.js"
-    )
-    selector_path = hass.config.path(
-        "custom_components/family_bell/frontend/bell-tts-selector.js"
-    )
+    path = hass.config.path("custom_components/family_bell/frontend/src/family_bell_panel.js")
 
     if StaticPathConfig:
         await hass.http.async_register_static_paths(
-            [
-                StaticPathConfig(PANEL_URL, path, False),
-                StaticPathConfig(
-                    "/bell-tts-selector.js", selector_path, False
-                ),
-            ]
+            [StaticPathConfig(PANEL_URL, path, False)]
         )
     else:
         await hass.http.async_register_static_paths(
-            [
-                {"url_path": PANEL_URL, "path": path, "cache_headers": False},
-                {
-                    "url_path": "/bell-tts-selector.js",
-                    "path": selector_path,
-                    "cache_headers": False,
-                },
-            ]
+            [{"url_path": PANEL_URL, "path": path, "cache_headers": False}]
         )
 
     # 3. Register Sidebar Panel
@@ -184,6 +167,7 @@ async def save_data(hass):
     store = hass.data[DOMAIN]["store"]
     data = hass.data[DOMAIN]["data"]
     await store.async_save(data)
+    hass.bus.async_fire("family_bell_update")
 
     entry_id = hass.data[DOMAIN]["entry_id"]
     entry = hass.config_entries.async_get_entry(entry_id)
