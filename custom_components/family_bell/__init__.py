@@ -94,6 +94,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.debug("Static path %s already registered", PANEL_URL)
 
     # 3. Register Sidebar Panel
+    # Explicitly remove existing panel to avoid overwrite error, which
+    # can happen during reloads even with update=True in some cases.
+    if async_remove_panel:
+        async_remove_panel(hass, "family_bell")
+
     try:
         if async_register_built_in_panel:
             async_register_built_in_panel(
@@ -107,6 +112,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 update=True,
             )
         else:
+            # Fallback for older HA
+            if hasattr(hass.components.frontend, "async_remove_panel"):
+                hass.components.frontend.async_remove_panel("family_bell")
+
             await hass.components.frontend.async_register_panel(
                 "family_bell",
                 "Family Bell 🔔",
@@ -117,8 +126,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 embed_iframe=False,
                 require_admin=True,
             )
-    except ValueError:
-        _LOGGER.debug("Panel family_bell already registered")
+    except ValueError as err:
+        _LOGGER.warning("Failed to register panel: %s", err)
+    except Exception as err:
+        _LOGGER.error("Unexpected error registering panel: %s", err)
 
     # 4. Register Websocket Commands
     try:
@@ -159,7 +170,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     if async_remove_panel:
         async_remove_panel(hass, "family_bell")
-    else:
+    elif hasattr(hass.components.frontend, "async_remove_panel"):
         hass.components.frontend.async_remove_panel("family_bell")
 
     hass.data.pop(DOMAIN)
