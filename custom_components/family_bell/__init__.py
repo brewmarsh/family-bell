@@ -35,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STORAGE_KEY = "family_bell_data"
 STORAGE_VERSION = 1
-PANEL_URL = "/family_bell_panel.js"
+PANEL_URL = "/family_bell/family_bell_panel.js"
 
 # Schema for a single bell
 BELL_SCHEMA = vol.Schema(
@@ -78,23 +78,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         "entry_id": entry.entry_id,
     }
 
-    # 2. Register Static Path for Frontend
+    # 2. Register Static Paths for Frontend
     path = hass.config.path(
-        "custom_components/family_bell/frontend/dist/family_bell_panel.js"
+        "custom_components/family_bell/frontend/family_bell_panel.js"
     )
+    path_selector = hass.config.path(
+        "custom_components/family_bell/frontend/bell-tts-selector.js"
+    )
+
     _LOGGER.debug("Registering static path: %s -> %s", PANEL_URL, path)
 
+    paths_to_register = []
+
+    if StaticPathConfig:
+        paths_to_register.append(StaticPathConfig(PANEL_URL, path, False))
+        paths_to_register.append(
+            StaticPathConfig(
+                "/family_bell/bell-tts-selector.js", path_selector, False
+            )
+        )
+    else:
+        paths_to_register.append(
+            {"url_path": PANEL_URL, "path": path, "cache_headers": False}
+        )
+        paths_to_register.append(
+            {
+                "url_path": "/family_bell/bell-tts-selector.js",
+                "path": path_selector,
+                "cache_headers": False,
+            }
+        )
+
     try:
-        if StaticPathConfig:
-            await hass.http.async_register_static_paths(
-                [StaticPathConfig(PANEL_URL, path, False)]
-            )
-        else:
-            await hass.http.async_register_static_paths(
-                [{"url_path": PANEL_URL, "path": path, "cache_headers": False}]
-            )
+        await hass.http.async_register_static_paths(paths_to_register)
     except RuntimeError:
-        _LOGGER.debug("Static path %s already registered", PANEL_URL)
+        _LOGGER.debug("Static paths already registered")
 
     # 3. Register Sidebar Panel
     _LOGGER.debug("Registering sidebar panel")
