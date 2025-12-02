@@ -79,7 +79,7 @@ automation:
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please see our [Contributing Guide](CONTRIBUTING.md) for more details.
+Contributions are welcome! Please see our [Contributing Guide](docs/CONTRIBUTING.md) for more details.
 
 ## 📄 License
 
