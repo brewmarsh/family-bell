@@ -19,11 +19,13 @@ class FamilyBellPanel extends LitElement {
 
   constructor() {
     super();
+    console.log("Family Bell: Panel Initialized");
     this.bells = [];
     this.vacation = { enabled: false, start: "", end: "" };
   }
 
   firstUpdated() {
+    console.log("Family Bell: First Updated");
     this.fetchData();
     this.hass.connection.subscribeMessage(() => this.fetchData(), {
       type: "family_bell_update",
@@ -31,6 +33,7 @@ class FamilyBellPanel extends LitElement {
   }
 
   fetchData() {
+    console.log("Family Bell: Fetching Data");
     this.hass.callWS({ type: "family_bell/get_data" }).then((data) => {
       this.bells = data.bells;
       this.vacation = data.vacation;
@@ -38,6 +41,7 @@ class FamilyBellPanel extends LitElement {
   }
 
   render() {
+    console.log("Family Bell: Rendering");
     return html`
       <div class="container">
         <div class="header">
