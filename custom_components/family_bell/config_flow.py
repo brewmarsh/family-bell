@@ -31,10 +31,12 @@ class FamilyBellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
+        _LOGGER.debug("Starting config flow user step. Input: %s", user_input)
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None:
+            _LOGGER.debug("Creating entry with data: %s", user_input)
             return self.async_create_entry(
                 title="Family Bell", data=user_input
             )
@@ -44,7 +46,9 @@ class FamilyBellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
+        _LOGGER.debug("Getting options flow for entry: %s", config_entry.entry_id)
         # OptionsFlow argument in __init__ is deprecated in HA 2024.12+
+        # We must instantiate without arguments and set config_entry manually.
         flow = FamilyBellOptionsFlowHandler()
         flow.config_entry = config_entry
         return flow
@@ -55,6 +59,7 @@ class FamilyBellOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
+        _LOGGER.debug("Options flow init step. Input: %s", user_input)
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
