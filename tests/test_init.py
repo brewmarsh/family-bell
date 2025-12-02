@@ -48,3 +48,41 @@ async def test_setup_entry_panel_conflict(hass: HomeAssistant):
             require_admin=True,
             update=True,
         )
+
+
+async def test_setup_entry_panel_overwrite_error(hass: HomeAssistant):
+    """Test setup entry handles ValueError from panel registration."""
+
+    # Mock config entry
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "bells": [],
+            "vacation": {"start": None, "end": None, "enabled": False},
+            "tts_provider": "tts.google_en_com",
+        },
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    # Mock async_register_built_in_panel to raise ValueError
+    with patch(
+        "custom_components.family_bell.async_register_built_in_panel",
+        side_effect=ValueError("Overwriting panel family-bell")
+    ) as mock_register:
+
+        # Mock hass.http.async_register_static_paths as it is awaited
+        hass.http = MagicMock()
+        hass.http.async_register_static_paths = AsyncMock()
+
+        # Mock schedule_bells
+        with patch("custom_components.family_bell.schedule_bells"):
+             # Mock async_remove_panel to do nothing (simulate failure to remove)
+            with patch("custom_components.family_bell.async_remove_panel", new=AsyncMock()):
+                # Call setup
+                result = await async_setup_entry(hass, entry)
+
+    # Assertions
+    # If the fix works, result should be True (setup succeeds despite error)
+    assert result is True
+    assert mock_register.called
