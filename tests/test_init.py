@@ -68,7 +68,7 @@ async def test_setup_entry_panel_overwrite_error(hass: HomeAssistant):
     # Mock async_register_built_in_panel to raise ValueError
     with patch(
         "custom_components.family_bell.async_register_built_in_panel",
-        side_effect=ValueError("Overwriting panel family-bell")
+        side_effect=ValueError("Overwriting panel family-bell"),
     ) as mock_register:
 
         # Mock hass.http.async_register_static_paths as it is awaited
@@ -77,8 +77,11 @@ async def test_setup_entry_panel_overwrite_error(hass: HomeAssistant):
 
         # Mock schedule_bells
         with patch("custom_components.family_bell.schedule_bells"):
-             # Mock async_remove_panel to do nothing (simulate failure to remove)
-            with patch("custom_components.family_bell.async_remove_panel", new=AsyncMock()):
+            # Mock async_remove_panel to do nothing (simulate failure to remove)
+            with patch(
+                "custom_components.family_bell.async_remove_panel",
+                new=AsyncMock(),
+            ):
                 # Call setup
                 result = await async_setup_entry(hass, entry)
 

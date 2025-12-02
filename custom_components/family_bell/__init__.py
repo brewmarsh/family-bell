@@ -148,7 +148,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         # If it still fails, we log it but don't crash setup
         _LOGGER.warning(
             "Failed to register panel (possible overwrite): %s. "
-            "This is usually harmless during reloads.", err
+            "This is usually harmless during reloads.",
+            err,
         )
     except Exception as err:
         _LOGGER.error("Unexpected error registering panel: %s", err)
