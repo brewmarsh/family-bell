@@ -116,8 +116,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             async_register_built_in_panel(
                 hass,
                 "family_bell",
-                "Family Bell 🔔",
-                "mdi:school-bell",
+                "Family Bell",
+                "mdi:bell",
                 "family-bell",
                 config={"module_url": PANEL_URL, "embed_iframe": False},
                 require_admin=True,
@@ -135,8 +135,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
             await hass.components.frontend.async_register_panel(
                 "family_bell",
-                "Family Bell 🔔",
-                "mdi:school-bell",
+                "Family Bell",
+                "mdi:bell",
                 "family_bell",
                 url_path="family-bell",
                 module_url=PANEL_URL,
@@ -148,7 +148,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         # If it still fails, we log it but don't crash setup
         _LOGGER.warning(
             "Failed to register panel (possible overwrite): %s. "
-            "This is usually harmless during reloads.", err
+            "This is usually harmless during reloads.",
+            err,
         )
     except Exception as err:
         _LOGGER.error("Unexpected error registering panel: %s", err)
