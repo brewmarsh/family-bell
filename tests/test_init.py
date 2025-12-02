@@ -1,6 +1,5 @@
 """Test family_bell setup process."""
 from unittest.mock import patch, MagicMock, AsyncMock
-import pytest
 from homeassistant.core import HomeAssistant
 from custom_components.family_bell import async_setup_entry, DOMAIN, PANEL_URL
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -30,7 +29,7 @@ async def test_setup_entry_panel_conflict(hass: HomeAssistant):
         hass.http.async_register_static_paths = AsyncMock()
 
         # Mock schedule_bells to simplify test and avoid side effects
-        with patch("custom_components.family_bell.schedule_bells") as mock_schedule:
+        with patch("custom_components.family_bell.schedule_bells"):
 
              # Call setup
              result = await async_setup_entry(hass, entry)
