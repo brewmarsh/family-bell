@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.2] - 2025-12-02
+
+### Fixed
+
+- Fix panel overwrite error on integration reload by using `update=True` in panel registration.
+
 ## [1.1.1] - 2024-02-05
 
 ### Fixed

@@ -104,6 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 "family-bell",
                 config={"module_url": PANEL_URL, "embed_iframe": False},
                 require_admin=True,
+                update=True,
             )
         else:
             await hass.components.frontend.async_register_panel(
