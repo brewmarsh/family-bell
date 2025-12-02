@@ -60,6 +60,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Family Bell from a config entry (UI Setup)."""
+    _LOGGER.debug("Setting up Family Bell config entry: %s", entry.entry_id)
 
     # 1. Setup Storage
     store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
@@ -80,6 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     path = hass.config.path(
         "custom_components/family_bell/frontend/src/family_bell_panel.js"
     )
+    _LOGGER.debug("Registering static path: %s -> %s", PANEL_URL, path)
 
     try:
         if StaticPathConfig:
@@ -94,6 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.debug("Static path %s already registered", PANEL_URL)
 
     # 3. Register Sidebar Panel
+    _LOGGER.debug("Registering sidebar panel")
     # Explicitly remove existing panel to avoid overwrite error, which
     # can happen during reloads even with update=True in some cases.
     if async_remove_panel:
@@ -111,6 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 require_admin=True,
                 update=True,
             )
+            _LOGGER.debug("Registered built-in panel")
         else:
             # Fallback for older HA
             if hasattr(hass.components.frontend, "async_remove_panel"):
@@ -126,12 +130,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 embed_iframe=False,
                 require_admin=True,
             )
+            _LOGGER.debug("Registered legacy panel")
     except ValueError as err:
         _LOGGER.warning("Failed to register panel: %s", err)
     except Exception as err:
         _LOGGER.error("Unexpected error registering panel: %s", err)
 
     # 4. Register Websocket Commands
+    _LOGGER.debug("Registering websocket commands")
     try:
         if async_register_command:
             async_register_command(hass, ws_get_data)
@@ -152,14 +158,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 hass, ws_update_vacation
             )
     except Exception:
-        pass  # Already registered
+        _LOGGER.debug("Websocket commands already registered")
 
     # 5. Start Scheduler
+    _LOGGER.debug("Starting scheduler")
     await schedule_bells(hass, entry)
 
     # 6. Listen for options updates
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
+    _LOGGER.debug("Async setup entry complete")
     return True
 
 
@@ -199,6 +207,7 @@ async def save_data(hass):
 
 async def schedule_bells(hass, entry):
     """Cancel old listeners and schedule next bells using Options for TTS."""
+    _LOGGER.debug("Scheduling bells")
     for remove_listener in hass.data[DOMAIN]["listeners"]:
         remove_listener()
     hass.data[DOMAIN]["listeners"] = []
@@ -231,6 +240,7 @@ async def schedule_bells(hass, entry):
         )
 
         if start and end and start <= now_date <= end:
+            _LOGGER.debug("Vacation mode enabled and active")
             return
 
     now = dt_util.now()
