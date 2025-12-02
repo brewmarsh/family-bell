@@ -49,15 +49,16 @@ class FamilyBellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug(
             "Getting options flow for entry: %s", config_entry.entry_id
         )
-        # OptionsFlow argument in __init__ is deprecated in HA 2024.12+
-        # We must instantiate without arguments and set config_entry manually.
-        flow = FamilyBellOptionsFlowHandler()
-        flow.config_entry = config_entry
-        return flow
+        return FamilyBellOptionsFlowHandler()
 
 
 class FamilyBellOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options flow for Family Bell (Settings > Configure)."""
+
+    @property
+    def config_entry(self):
+        """Return the config entry."""
+        return self.hass.config_entries.async_get_entry(self.handler)
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
