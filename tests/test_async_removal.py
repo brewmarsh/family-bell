@@ -2,7 +2,7 @@
 
 from unittest.mock import patch, MagicMock, AsyncMock
 from homeassistant.core import HomeAssistant
-from custom_components.family_bell import async_setup_entry, DOMAIN, PANEL_URL
+from custom_components.family_bell import async_setup_entry, DOMAIN
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 
