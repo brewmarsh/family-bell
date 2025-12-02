@@ -71,8 +71,12 @@ class FamilyBellOptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Required(
                     "tts_provider", default=current_provider
                 ): EntitySelector(EntitySelectorConfig(domain="tts")),
-                vol.Optional("tts_voice", default=current_voice): TextSelector(),
-                vol.Optional("tts_language", default=current_lang): TextSelector(),
+                vol.Optional(
+                    "tts_voice", default=current_voice
+                ): TextSelector(),
+                vol.Optional(
+                    "tts_language", default=current_lang
+                ): TextSelector(),
             }
         )
 
