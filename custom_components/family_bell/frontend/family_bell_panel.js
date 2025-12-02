@@ -2,7 +2,7 @@ import {
   LitElement,
   html,
   css,
-} from "https://unpkg.com/lit-element@2.4.0/lit-element.js?module";
+} from "./lit-element.js";
 import "./bell-tts-selector.js";
 
 class FamilyBellPanel extends LitElement {
@@ -358,4 +358,4 @@ class FamilyBellPanel extends LitElement {
   }
 }
 
-customElements.define("family-bell-panel", FamilyBellPanel);
+customElements.define("family-bell", FamilyBellPanel);
