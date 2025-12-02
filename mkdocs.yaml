@@ -5,3 +5,8 @@ nav:
   - Home: index.md
   - Installation: installation.md
   - Configuration: configuration.md
+  - Contributing: CONTRIBUTING.md
+  - Best Practices: pipeline_best_practices.md
+  - Runner Setup: runner_setup.md
+  - Todo: todo.md
+  - Agents: agents.md
