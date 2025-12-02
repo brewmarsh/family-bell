@@ -27,6 +27,12 @@ async def test_setup_entry_panel_removal_await(hass: HomeAssistant):
     # No, `mock_remove_panel` is the wrapper.
     # If side_effect is an AsyncMock object, calling mock_remove_panel() returns an awaitable.
 
+    # Pre-populate frontend_panels so the removal logic triggers
+    hass.data["frontend_panels"] = {
+        "family-bell": "something",
+        "family_bell": "something",
+    }
+
     mock_remove = AsyncMock()
 
     with patch(

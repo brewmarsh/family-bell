@@ -103,13 +103,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if async_remove_panel:
         # Try removing both hyphen and underscore versions to be safe,
         # as logs indicated potential confusion.
+        frontend_panels = hass.data.get("frontend_panels", {})
         for panel_id in ["family-bell", "family_bell"]:
-            try:
-                res = async_remove_panel(hass, panel_id)
-                if inspect.isawaitable(res):
-                    await res
-            except Exception as ex:
-                _LOGGER.debug("Error removing panel %s: %s", panel_id, ex)
+            if panel_id in frontend_panels:
+                try:
+                    res = async_remove_panel(hass, panel_id)
+                    if inspect.isawaitable(res):
+                        await res
+                except Exception as ex:
+                    _LOGGER.debug("Error removing panel %s: %s", panel_id, ex)
 
     try:
         if async_register_built_in_panel:
