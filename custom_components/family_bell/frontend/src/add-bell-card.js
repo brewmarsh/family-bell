@@ -13,6 +13,67 @@ class AddBellCard extends LitElement {
     };
   }
 
+  static get styles() {
+    return css`
+      .card {
+        background: var(--card-background-color);
+        padding: 16px;
+        margin-bottom: 16px;
+        border-radius: 12px;
+        box-shadow: var(--ha-card-box-shadow, 0 2px 2px 0 rgba(0,0,0,0.14));
+        border: 1px solid var(--divider-color);
+      }
+      .row { display: flex; gap: 10px; margin-bottom: 15px; }
+      input[type="text"], input[type="time"] {
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid var(--divider-color);
+        background: var(--secondary-background-color);
+        color: var(--primary-text-color);
+        font-size: 16px;
+      }
+      .time-input { flex: 0 0 100px; }
+      .msg-input { flex: 1; }
+      .day-selector { display: flex; gap: 8px; margin-bottom: 15px; justify-content: center; }
+      .day-bubble {
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        background: var(--secondary-background-color);
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.2s;
+        border: 1px solid var(--divider-color);
+      }
+      .day-bubble.selected {
+        background: var(--primary-color);
+        color: var(--text-primary-color, white);
+        border-color: var(--primary-color);
+      }
+      .speaker-list {
+        max-height: 150px;
+        overflow-y: auto;
+        background: var(--secondary-background-color);
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 15px;
+      }
+      .checkbox-container { display: block; padding: 5px 0; cursor: pointer; }
+      .save-btn {
+        width: 100%;
+        padding: 12px;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      .section-label { font-weight: bold; margin-bottom: 8px; font-size: 0.9em; color: var(--secondary-text-color); }
+    `;
+  }
+
   constructor() {
     super();
     this._newDays = [];
@@ -33,7 +94,6 @@ class AddBellCard extends LitElement {
 
   render() {
     return html`
-      <link rel="stylesheet" href="/local/family_bell/src/styles/add-bell-card.css" />
       <div class="card add-card">
         <h2>➕ Add New Bell</h2>
 
