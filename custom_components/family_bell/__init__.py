@@ -1,6 +1,7 @@
 import logging
 import datetime
 import voluptuous as vol
+import inspect
 
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
@@ -100,7 +101,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # Explicitly remove existing panel to avoid overwrite error, which
     # can happen during reloads even with update=True in some cases.
     if async_remove_panel:
-        async_remove_panel(hass, "family-bell")
+        # Try removing both hyphen and underscore versions to be safe,
+        # as logs indicated potential confusion.
+        for panel_id in ["family-bell", "family_bell"]:
+            try:
+                res = async_remove_panel(hass, panel_id)
+                if inspect.isawaitable(res):
+                    await res
+            except Exception as ex:
+                _LOGGER.debug("Error removing panel %s: %s", panel_id, ex)
 
     try:
         if async_register_built_in_panel:
@@ -118,7 +127,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         else:
             # Fallback for older HA
             if hasattr(hass.components.frontend, "async_remove_panel"):
-                hass.components.frontend.async_remove_panel("family-bell")
+                res = hass.components.frontend.async_remove_panel("family-bell")
+                if inspect.isawaitable(res):
+                    await res
 
             await hass.components.frontend.async_register_panel(
                 "family_bell",
@@ -132,7 +143,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             )
             _LOGGER.debug("Registered legacy panel")
     except ValueError as err:
-        _LOGGER.warning("Failed to register panel: %s", err)
+        # If it still fails, we log it but don't crash setup
+        _LOGGER.warning("Failed to register panel (possible overwrite): %s", err)
     except Exception as err:
         _LOGGER.error("Unexpected error registering panel: %s", err)
 
@@ -177,9 +189,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         remove_listener()
 
     if async_remove_panel:
-        async_remove_panel(hass, "family-bell")
+        res = async_remove_panel(hass, "family-bell")
+        if inspect.isawaitable(res):
+            await res
     elif hasattr(hass.components.frontend, "async_remove_panel"):
-        hass.components.frontend.async_remove_panel("family-bell")
+        res = hass.components.frontend.async_remove_panel("family-bell")
+        if inspect.isawaitable(res):
+            await res
 
     hass.data.pop(DOMAIN)
     return True
