@@ -41,8 +41,8 @@ async def test_setup_entry_panel_conflict(hass: HomeAssistant):
         mock_register.assert_called_once_with(
             hass,
             "family_bell",
-            "Family Bell 🔔",
-            "mdi:school-bell",
+            "Family Bell",
+            "mdi:bell",
             "family-bell",
             config={"module_url": PANEL_URL, "embed_iframe": False},
             require_admin=True,
