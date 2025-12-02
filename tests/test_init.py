@@ -1,8 +1,10 @@
 """Test family_bell setup process."""
+
 from unittest.mock import patch, MagicMock, AsyncMock
 from homeassistant.core import HomeAssistant
 from custom_components.family_bell import async_setup_entry, DOMAIN, PANEL_URL
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+
 
 async def test_setup_entry_panel_conflict(hass: HomeAssistant):
     """Test setup entry handles panel conflict gracefully."""
@@ -13,9 +15,9 @@ async def test_setup_entry_panel_conflict(hass: HomeAssistant):
         data={
             "bells": [],
             "vacation": {"start": None, "end": None, "enabled": False},
-             "tts_provider": "tts.google_en_com"
+            "tts_provider": "tts.google_en_com",
         },
-        options={}
+        options={},
     )
     entry.add_to_hass(hass)
 
@@ -31,8 +33,8 @@ async def test_setup_entry_panel_conflict(hass: HomeAssistant):
         # Mock schedule_bells to simplify test and avoid side effects
         with patch("custom_components.family_bell.schedule_bells"):
 
-             # Call setup
-             result = await async_setup_entry(hass, entry)
+            # Call setup
+            result = await async_setup_entry(hass, entry)
 
         # Assertions
         assert result is True
