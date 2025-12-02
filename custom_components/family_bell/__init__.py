@@ -127,7 +127,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         else:
             # Fallback for older HA
             if hasattr(hass.components.frontend, "async_remove_panel"):
-                res = hass.components.frontend.async_remove_panel("family-bell")
+                res = hass.components.frontend.async_remove_panel(
+                    "family-bell"
+                )
                 if inspect.isawaitable(res):
                     await res
 
@@ -144,7 +146,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             _LOGGER.debug("Registered legacy panel")
     except ValueError as err:
         # If it still fails, we log it but don't crash setup
-        _LOGGER.warning("Failed to register panel (possible overwrite): %s", err)
+        _LOGGER.warning(
+            "Failed to register panel (possible overwrite): %s", err
+        )
     except Exception as err:
         _LOGGER.error("Unexpected error registering panel: %s", err)
 

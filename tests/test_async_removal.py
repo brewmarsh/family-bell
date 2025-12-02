@@ -30,7 +30,8 @@ async def test_setup_entry_panel_removal_await(hass: HomeAssistant):
     mock_remove = AsyncMock()
 
     with patch(
-        "custom_components.family_bell.async_remove_panel", side_effect=mock_remove
+        "custom_components.family_bell.async_remove_panel",
+        side_effect=mock_remove,
     ) as mock_remove_panel, patch(
         "custom_components.family_bell.async_register_built_in_panel",
     ) as mock_register:
