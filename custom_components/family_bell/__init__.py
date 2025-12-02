@@ -80,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # 2. Register Static Path for Frontend
     path = hass.config.path(
-        "custom_components/family_bell/frontend/src/family_bell_panel.js"
+        "custom_components/family_bell/frontend/dist/family_bell_panel.js"
     )
     _LOGGER.debug("Registering static path: %s -> %s", PANEL_URL, path)
 
