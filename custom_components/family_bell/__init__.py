@@ -100,7 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # Explicitly remove existing panel to avoid overwrite error, which
     # can happen during reloads even with update=True in some cases.
     if async_remove_panel:
-        async_remove_panel(hass, "family_bell")
+        async_remove_panel(hass, "family-bell")
 
     try:
         if async_register_built_in_panel:
@@ -118,7 +118,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         else:
             # Fallback for older HA
             if hasattr(hass.components.frontend, "async_remove_panel"):
-                hass.components.frontend.async_remove_panel("family_bell")
+                hass.components.frontend.async_remove_panel("family-bell")
 
             await hass.components.frontend.async_register_panel(
                 "family_bell",
@@ -177,9 +177,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         remove_listener()
 
     if async_remove_panel:
-        async_remove_panel(hass, "family_bell")
+        async_remove_panel(hass, "family-bell")
     elif hasattr(hass.components.frontend, "async_remove_panel"):
-        hass.components.frontend.async_remove_panel("family_bell")
+        hass.components.frontend.async_remove_panel("family-bell")
 
     hass.data.pop(DOMAIN)
     return True
