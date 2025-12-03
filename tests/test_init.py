@@ -47,7 +47,7 @@ async def test_setup_entry_panel_conflict(hass: HomeAssistant):
             config={"module_url": PANEL_URL, "embed_iframe": False},
             require_admin=True,
             update=True,
-            web_component_name="family-bell",
+            component_name="family-bell",
         )
 
 
