@@ -152,6 +152,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 "Family Bell",
                 "mdi:bell",
                 "family-bell",
+                "family-bell",
                 config={"module_url": PANEL_URL, "embed_iframe": False},
                 require_admin=True,
                 update=True,
