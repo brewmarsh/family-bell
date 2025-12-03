@@ -40,14 +40,13 @@ async def test_setup_entry_panel_conflict(hass: HomeAssistant):
         assert result is True
         mock_register.assert_called_once_with(
             hass,
-            "family-bell",
+            component_name="family-bell",
             sidebar_title="Family Bell",
             sidebar_icon="mdi:bell",
             frontend_url_path="family-bell",
             config={"module_url": PANEL_URL, "embed_iframe": False},
             require_admin=True,
             update=True,
-            component_name="family-bell",
         )
 
 
