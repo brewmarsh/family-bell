@@ -38,6 +38,10 @@ class FamilyBellPanel extends LitElement {
 
   fetchData() {
     console.log("Family Bell: Fetching data");
+    if (!this.hass) {
+        console.warn("Family Bell: hass not set while fetching data");
+        return;
+    }
     this.hass.callWS({ type: "family_bell/get_data" }).then((data) => {
       this.bells = data.bells;
       this.vacation = data.vacation;
@@ -49,10 +53,13 @@ class FamilyBellPanel extends LitElement {
         }
       }
       this.requestUpdate();
+    }).catch(err => {
+        console.error("Family Bell: Error fetching data", err);
     });
   }
 
   getMediaPlayers() {
+    if (!this.hass || !this.hass.states) return [];
     return Object.keys(this.hass.states)
       .filter((eid) => eid.startsWith("media_player."))
       .map((eid) => {
@@ -66,6 +73,19 @@ class FamilyBellPanel extends LitElement {
 
   render() {
     console.log("Family Bell: Render called");
+    if (!this.hass) {
+        return html`
+            <div class="container">
+                <div class="header">
+                  <h1>🔔 Family Bell</h1>
+                </div>
+                <div class="card">
+                    <p>Loading Home Assistant connection...</p>
+                </div>
+            </div>
+        `;
+    }
+
     return html`
       <div class="container">
         <div class="header">
