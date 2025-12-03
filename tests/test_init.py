@@ -40,7 +40,7 @@ async def test_setup_entry_panel_conflict(hass: HomeAssistant):
         assert result is True
         mock_register.assert_called_once_with(
             hass,
-            "family_bell",
+            "family-bell",
             "Family Bell",
             "mdi:bell",
             "family-bell",
