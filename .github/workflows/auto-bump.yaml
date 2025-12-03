@@ -1,0 +1,39 @@
+name: Auto Version Bump
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  bump-version:
+    # Skip if the commit was made by this workflow to prevent infinite loops.
+    # We check if the message starts with "chore(release):"
+    if: "!startsWith(github.event.head_commit.message, 'chore(release):')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Determine and Bump Version
+        id: bump
+        run: |
+          python .github/scripts/bump_version.py "${{ github.event.before }}" "${{ github.event.after }}"
+
+      - name: Commit and Push
+        if: steps.bump.outputs.bump_occurred == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore(release): bump version to ${{ steps.bump.outputs.new_version }}"
+          git push origin HEAD:main
