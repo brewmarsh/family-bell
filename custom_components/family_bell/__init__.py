@@ -85,6 +85,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     path_selector = hass.config.path(
         "custom_components/family_bell/frontend/bell-tts-selector.js"
     )
+    path_lit = hass.config.path(
+        "custom_components/family_bell/frontend/lit-element.js"
+    )
 
     _LOGGER.debug("Registering static path: %s -> %s", PANEL_URL, path)
 
@@ -97,6 +100,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 "/family_bell/bell-tts-selector.js", path_selector, False
             )
         )
+        paths_to_register.append(
+            StaticPathConfig("/family_bell/lit-element.js", path_lit, False)
+        )
     else:
         paths_to_register.append(
             {"url_path": PANEL_URL, "path": path, "cache_headers": False}
@@ -105,6 +111,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             {
                 "url_path": "/family_bell/bell-tts-selector.js",
                 "path": path_selector,
+                "cache_headers": False,
+            }
+        )
+        paths_to_register.append(
+            {
+                "url_path": "/family_bell/lit-element.js",
+                "path": path_lit,
                 "cache_headers": False,
             }
         )
