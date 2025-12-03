@@ -148,10 +148,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         if async_register_built_in_panel:
             async_register_built_in_panel(
                 hass,
-                "family_bell",
-                "Family Bell",
-                "mdi:bell",
                 "family-bell",
+                sidebar_title="Family Bell",
+                sidebar_icon="mdi:bell",
+                frontend_url_path="family-bell",
                 config={"module_url": PANEL_URL, "embed_iframe": False},
                 require_admin=True,
                 update=True,
