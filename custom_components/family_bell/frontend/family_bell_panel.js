@@ -17,6 +17,7 @@ class FamilyBellPanel extends LitElement {
       _newSpeakers: { type: Array },
       _newTTS: { type: Object },
       _globalTTS: { type: Object },
+      _version: { type: String },
     };
   }
 
@@ -29,11 +30,31 @@ class FamilyBellPanel extends LitElement {
     this._newSpeakers = [];
     this._newTTS = { provider: "", voice: "", language: "" };
     this._globalTTS = {};
+    this._version = "unknown";
   }
 
   firstUpdated() {
     console.log("Family Bell: firstUpdated called");
     this.fetchData();
+  }
+
+  connectedCallback() {
+      super.connectedCallback();
+      console.log("Family Bell: connectedCallback called");
+  }
+
+  updated(changedProperties) {
+    if (changedProperties.has("hass") && this.hass && !this.bells.length) {
+      // If hass just became available and we haven't loaded data, try fetching
+      // We check !this.bells.length as a simple heuristic, though ideally we'd track a _loaded flag
+      // But bells could legitimately be empty.
+      // Better: check if we successfully fetched.
+      // Let's use a flag.
+      if (!this._dataFetched) {
+         console.log("Family Bell: hass updated and data not fetched, retrying fetch");
+         this.fetchData();
+      }
+    }
   }
 
   fetchData() {
@@ -43,8 +64,14 @@ class FamilyBellPanel extends LitElement {
         return;
     }
     this.hass.callWS({ type: "family_bell/get_data" }).then((data) => {
+      console.log("Family Bell: Data received", data);
       this.bells = data.bells;
       this.vacation = data.vacation;
+      this._dataFetched = true;
+      if (data.version) {
+          this._version = data.version;
+          console.log("Family Bell: Backend version", this._version);
+      }
       if (data.global_tts) {
         this._globalTTS = data.global_tts;
         // Set default for new bell if not set
@@ -89,7 +116,7 @@ class FamilyBellPanel extends LitElement {
     return html`
       <div class="container">
         <div class="header">
-          <h1>🔔 Family Bell</h1>
+          <h1>🔔 Family Bell <span class="version">v${this._version}</span></h1>
         </div>
 
         <div class="card">
@@ -298,6 +325,7 @@ class FamilyBellPanel extends LitElement {
       }
       .container { max-width: 600px; margin: 0 auto; padding-bottom: 50px;}
       h1, h2, h3 { margin-top: 0; font-weight: normal; }
+      .version { font-size: 0.5em; color: var(--secondary-text-color); vertical-align: middle; }
       
       .card {
         background: var(--card-background-color);
