@@ -5,6 +5,8 @@ import {
 } from "./lit-element.js";
 import "./bell-tts-selector.js";
 
+console.log("Family Bell: Loaded family_bell_panel.js");
+
 class FamilyBellPanel extends LitElement {
   static get properties() {
     return {
@@ -20,6 +22,7 @@ class FamilyBellPanel extends LitElement {
 
   constructor() {
     super();
+    console.log("Family Bell: Constructor called");
     this.bells = [];
     this.vacation = { enabled: false, start: "", end: "" };
     this._newDays = [];
@@ -29,10 +32,12 @@ class FamilyBellPanel extends LitElement {
   }
 
   firstUpdated() {
+    console.log("Family Bell: firstUpdated called");
     this.fetchData();
   }
 
   fetchData() {
+    console.log("Family Bell: Fetching data");
     this.hass.callWS({ type: "family_bell/get_data" }).then((data) => {
       this.bells = data.bells;
       this.vacation = data.vacation;
@@ -60,6 +65,7 @@ class FamilyBellPanel extends LitElement {
   }
 
   render() {
+    console.log("Family Bell: Render called");
     return html`
       <div class="container">
         <div class="header">
