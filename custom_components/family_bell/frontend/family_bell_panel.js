@@ -358,4 +358,6 @@ class FamilyBellPanel extends LitElement {
   }
 }
 
-customElements.define("family-bell", FamilyBellPanel);
+if (!customElements.get("family-bell")) {
+  customElements.define("family-bell", FamilyBellPanel);
+}

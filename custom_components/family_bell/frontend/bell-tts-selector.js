@@ -222,4 +222,6 @@ export class BellTTSSelector extends LitElement {
   }
 }
 
-customElements.define("bell-tts-selector", BellTTSSelector);
+if (!customElements.get("bell-tts-selector")) {
+  customElements.define("bell-tts-selector", BellTTSSelector);
+}
