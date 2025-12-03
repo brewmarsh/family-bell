@@ -3,7 +3,6 @@ import datetime
 import voluptuous as vol
 import inspect
 import json
-import os
 
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
