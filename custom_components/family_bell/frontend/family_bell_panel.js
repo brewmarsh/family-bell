@@ -6,6 +6,7 @@ import {
 import "./bell-tts-selector.js";
 
 console.log("Family Bell: Loaded family_bell_panel.js");
+console.warn("Family Bell: Loaded family_bell_panel.js (DEBUG LOG)");
 
 class FamilyBellPanel extends LitElement {
   static get properties() {
@@ -24,6 +25,7 @@ class FamilyBellPanel extends LitElement {
   constructor() {
     super();
     console.log("Family Bell: Constructor called");
+    console.warn("Family Bell: Constructor called (DEBUG LOG)");
     this.bells = [];
     this.vacation = { enabled: false, start: "", end: "" };
     this._newDays = [];
@@ -35,6 +37,7 @@ class FamilyBellPanel extends LitElement {
 
   firstUpdated() {
     console.log("Family Bell: firstUpdated called");
+    console.warn("Family Bell: firstUpdated called (DEBUG LOG)");
     this.fetchData();
   }
 
