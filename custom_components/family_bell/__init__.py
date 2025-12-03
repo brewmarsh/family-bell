@@ -181,7 +181,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         else:
             # Fallback for older HA
             if hasattr(hass.components.frontend, "async_remove_panel"):
-                res = hass.components.frontend.async_remove_panel("family-bell")
+                res = hass.components.frontend.async_remove_panel(
+                    "family-bell"
+                )
                 if inspect.isawaitable(res):
                     await res
 
@@ -347,7 +349,9 @@ async def schedule_bells(hass, entry):
                     if voice:
                         service_data["options"] = {"voice": voice}
 
-                    await hass.services.async_call("tts", "speak", service_data)
+                    await hass.services.async_call(
+                        "tts", "speak", service_data
+                    )
 
                 await schedule_bells(hass, entry)
 
@@ -362,7 +366,9 @@ async def schedule_bells(hass, entry):
 # --- WebSocket Handlers ---
 
 
-@websocket_api.websocket_command({vol.Required("type"): "family_bell/get_data"})
+@websocket_api.websocket_command(
+    {vol.Required("type"): "family_bell/get_data"}
+)
 @websocket_api.async_response
 async def ws_get_data(hass, connection, msg):
     data = hass.data[DOMAIN]["data"]
