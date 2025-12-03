@@ -62,17 +62,26 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Family Bell from a config entry (UI Setup)."""
-    # Read version from manifest.json
-    try:
-        manifest_path = hass.config.path("custom_components/family_bell/manifest.json")
-        with open(manifest_path, "r") as f:
-            manifest = json.load(f)
-        version = manifest.get("version", "unknown")
-    except Exception as e:
-        version = "unknown"
-        _LOGGER.warning("Could not read version from manifest: %s", e)
 
-    _LOGGER.debug("Setting up Family Bell config entry: %s (Version: %s)", entry.entry_id, version)
+    def read_version():
+        try:
+            manifest_path = hass.config.path(
+                "custom_components/family_bell/manifest.json"
+            )
+            with open(manifest_path, "r") as f:
+                manifest = json.load(f)
+            return manifest.get("version", "unknown")
+        except Exception as e:
+            _LOGGER.warning("Could not read version from manifest: %s", e)
+            return "unknown"
+
+    version = await hass.async_add_executor_job(read_version)
+
+    _LOGGER.debug(
+        "Setting up Family Bell config entry: %s (Version: %s)",
+        entry.entry_id,
+        version,
+    )
 
     # 1. Setup Storage
     store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
@@ -172,9 +181,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         else:
             # Fallback for older HA
             if hasattr(hass.components.frontend, "async_remove_panel"):
-                res = hass.components.frontend.async_remove_panel(
-                    "family-bell"
-                )
+                res = hass.components.frontend.async_remove_panel("family-bell")
                 if inspect.isawaitable(res):
                     await res
 
@@ -340,9 +347,7 @@ async def schedule_bells(hass, entry):
                     if voice:
                         service_data["options"] = {"voice": voice}
 
-                    await hass.services.async_call(
-                        "tts", "speak", service_data
-                    )
+                    await hass.services.async_call("tts", "speak", service_data)
 
                 await schedule_bells(hass, entry)
 
@@ -357,9 +362,7 @@ async def schedule_bells(hass, entry):
 # --- WebSocket Handlers ---
 
 
-@websocket_api.websocket_command(
-    {vol.Required("type"): "family_bell/get_data"}
-)
+@websocket_api.websocket_command({vol.Required("type"): "family_bell/get_data"})
 @websocket_api.async_response
 async def ws_get_data(hass, connection, msg):
     data = hass.data[DOMAIN]["data"]

@@ -43,6 +43,20 @@ class FamilyBellPanel extends LitElement {
       console.log("Family Bell: connectedCallback called");
   }
 
+  updated(changedProperties) {
+    if (changedProperties.has("hass") && this.hass && !this.bells.length) {
+      // If hass just became available and we haven't loaded data, try fetching
+      // We check !this.bells.length as a simple heuristic, though ideally we'd track a _loaded flag
+      // But bells could legitimately be empty.
+      // Better: check if we successfully fetched.
+      // Let's use a flag.
+      if (!this._dataFetched) {
+         console.log("Family Bell: hass updated and data not fetched, retrying fetch");
+         this.fetchData();
+      }
+    }
+  }
+
   fetchData() {
     console.log("Family Bell: Fetching data");
     if (!this.hass) {
@@ -53,6 +67,7 @@ class FamilyBellPanel extends LitElement {
       console.log("Family Bell: Data received", data);
       this.bells = data.bells;
       this.vacation = data.vacation;
+      this._dataFetched = true;
       if (data.version) {
           this._version = data.version;
           console.log("Family Bell: Backend version", this._version);
