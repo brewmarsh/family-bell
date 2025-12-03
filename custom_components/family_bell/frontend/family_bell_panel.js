@@ -17,6 +17,7 @@ class FamilyBellPanel extends LitElement {
       _newSpeakers: { type: Array },
       _newTTS: { type: Object },
       _globalTTS: { type: Object },
+      _version: { type: String },
     };
   }
 
@@ -29,6 +30,7 @@ class FamilyBellPanel extends LitElement {
     this._newSpeakers = [];
     this._newTTS = { provider: "", voice: "", language: "" };
     this._globalTTS = {};
+    this._version = "unknown";
   }
 
   firstUpdated() {
@@ -36,11 +38,25 @@ class FamilyBellPanel extends LitElement {
     this.fetchData();
   }
 
+  connectedCallback() {
+      super.connectedCallback();
+      console.log("Family Bell: connectedCallback called");
+  }
+
   fetchData() {
     console.log("Family Bell: Fetching data");
+    if (!this.hass) {
+        console.warn("Family Bell: hass not set while fetching data");
+        return;
+    }
     this.hass.callWS({ type: "family_bell/get_data" }).then((data) => {
+      console.log("Family Bell: Data received", data);
       this.bells = data.bells;
       this.vacation = data.vacation;
+      if (data.version) {
+          this._version = data.version;
+          console.log("Family Bell: Backend version", this._version);
+      }
       if (data.global_tts) {
         this._globalTTS = data.global_tts;
         // Set default for new bell if not set
@@ -49,10 +65,13 @@ class FamilyBellPanel extends LitElement {
         }
       }
       this.requestUpdate();
+    }).catch(err => {
+        console.error("Family Bell: Error fetching data", err);
     });
   }
 
   getMediaPlayers() {
+    if (!this.hass || !this.hass.states) return [];
     return Object.keys(this.hass.states)
       .filter((eid) => eid.startsWith("media_player."))
       .map((eid) => {
@@ -66,10 +85,23 @@ class FamilyBellPanel extends LitElement {
 
   render() {
     console.log("Family Bell: Render called");
+    if (!this.hass) {
+        return html`
+            <div class="container">
+                <div class="header">
+                  <h1>🔔 Family Bell</h1>
+                </div>
+                <div class="card">
+                    <p>Loading Home Assistant connection...</p>
+                </div>
+            </div>
+        `;
+    }
+
     return html`
       <div class="container">
         <div class="header">
-          <h1>🔔 Family Bell</h1>
+          <h1>🔔 Family Bell <span class="version">v${this._version}</span></h1>
         </div>
 
         <div class="card">
@@ -278,6 +310,7 @@ class FamilyBellPanel extends LitElement {
       }
       .container { max-width: 600px; margin: 0 auto; padding-bottom: 50px;}
       h1, h2, h3 { margin-top: 0; font-weight: normal; }
+      .version { font-size: 0.5em; color: var(--secondary-text-color); vertical-align: middle; }
       
       .card {
         background: var(--card-background-color);

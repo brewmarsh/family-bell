@@ -42,7 +42,7 @@ export class BellTTSSelector extends LitElement {
   }
 
   _fetchProviders() {
-    if (!this.hass) return;
+    if (!this.hass || !this.hass.states) return;
     this._providers = Object.keys(this.hass.states)
       .filter((eid) => eid.startsWith("tts."))
       .map((eid) => ({
@@ -65,7 +65,7 @@ export class BellTTSSelector extends LitElement {
 
   async _fetchVoices(providerId) {
     this._voices = [];
-    if (!providerId) return;
+    if (!providerId || !this.hass || !this.hass.states) return;
 
     // Check if attributes have options (common in some integrations)
     const state = this.hass.states[providerId];

@@ -2,6 +2,8 @@ import logging
 import datetime
 import voluptuous as vol
 import inspect
+import json
+import os
 
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
@@ -61,7 +63,17 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Family Bell from a config entry (UI Setup)."""
-    _LOGGER.debug("Setting up Family Bell config entry: %s", entry.entry_id)
+    # Read version from manifest.json
+    try:
+        manifest_path = hass.config.path("custom_components/family_bell/manifest.json")
+        with open(manifest_path, "r") as f:
+            manifest = json.load(f)
+        version = manifest.get("version", "unknown")
+    except Exception as e:
+        version = "unknown"
+        _LOGGER.warning("Could not read version from manifest: %s", e)
+
+    _LOGGER.debug("Setting up Family Bell config entry: %s (Version: %s)", entry.entry_id, version)
 
     # 1. Setup Storage
     store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
@@ -76,6 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         "data": data,
         "listeners": [],
         "entry_id": entry.entry_id,
+        "version": version,
     }
 
     # 2. Register Static Paths for Frontend
@@ -363,6 +376,9 @@ async def ws_get_data(hass, connection, msg):
             "voice": entry.options.get("tts_voice"),
             "language": entry.options.get("tts_language", "en"),
         }
+
+    # Inject version
+    data["version"] = hass.data[DOMAIN].get("version", "unknown")
 
     connection.send_result(msg["id"], data)
 
