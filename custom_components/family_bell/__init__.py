@@ -148,7 +148,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         if async_register_built_in_panel:
             async_register_built_in_panel(
                 hass,
-                "family_bell",
+                "family-bell",
                 "Family Bell",
                 "mdi:bell",
                 "family-bell",
