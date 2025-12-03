@@ -155,7 +155,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 config={"module_url": PANEL_URL, "embed_iframe": False},
                 require_admin=True,
                 update=True,
-                web_component_name="family-bell",
+                component_name="family-bell",
             )
             _LOGGER.debug("Registered built-in panel")
         else:
