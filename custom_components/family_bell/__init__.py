@@ -162,27 +162,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     try:
         if async_register_built_in_panel:
-            # We must use 'family-bell' to match the custom element tag name
-            # defined in the JS.
-            # 'module_url' tells the frontend where to load it from.
-            panel_config = {"module_url": PANEL_URL}
+            # Construct versioned URL for cache busting
+            panel_url = f"{PANEL_URL}?v={version}"
+
+            # NOTE: We do NOT need to call add_extra_js_url here because the 'custom'
+            # panel component handles loading the module_url automatically.
+            # Using component_name="custom" is the key.
+
             _LOGGER.debug(
-                "Calling async_register_built_in_panel with: component_name='family-bell', "
-                "sidebar_title='Family Bell', sidebar_icon='mdi:bell', frontend_url_path='family-bell', "
-                "config=%s",
-                panel_config,
+                "Calling async_register_built_in_panel with: component_name='custom', "
+                "sidebar_title='Family Bell', sidebar_icon='mdi:bell', frontend_url_path='family-bell'"
             )
+
             async_register_built_in_panel(
                 hass,
-                component_name="family-bell",
+                component_name="custom",
                 sidebar_title="Family Bell",
                 sidebar_icon="mdi:bell",
                 frontend_url_path="family-bell",
-                config=panel_config,
+                config={
+                    "_panel_custom": {
+                        "name": "family-bell",
+                        "module_url": panel_url,
+                        "embed_iframe": False,
+                        "trust_external_script": True,
+                    }
+                },
                 require_admin=True,
                 update=True,
             )
-            _LOGGER.debug("Registered built-in panel")
+            _LOGGER.debug("Registered built-in panel (custom)")
 
             # Verify registration
             panels = hass.data.get("frontend_panels", {})

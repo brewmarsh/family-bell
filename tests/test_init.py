@@ -43,13 +43,21 @@ async def test_setup_entry_panel_conflict(hass: HomeAssistant):
 
         # Assertions
         assert result is True
+        expected_url = f"{PANEL_URL}?v=unknown"
         mock_register.assert_called_once_with(
             hass,
-            component_name="family-bell",
+            component_name="custom",
             sidebar_title="Family Bell",
             sidebar_icon="mdi:bell",
             frontend_url_path="family-bell",
-            config={"module_url": PANEL_URL},
+            config={
+                "_panel_custom": {
+                    "name": "family-bell",
+                    "module_url": expected_url,
+                    "embed_iframe": False,
+                    "trust_external_script": True,
+                }
+            },
             require_admin=True,
             update=True,
         )
