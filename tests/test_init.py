@@ -31,8 +31,9 @@ async def test_setup_entry_panel_conflict(hass: HomeAssistant):
         hass.http.async_register_static_paths = AsyncMock()
 
         # Mock OS path checks to pretend frontend files exist
-        with patch("os.path.isdir", return_value=True), \
-             patch("os.path.isfile", return_value=True):
+        with patch("os.path.isdir", return_value=True), patch(
+            "os.path.isfile", return_value=True
+        ):
 
             # Mock schedule_bells to simplify test and avoid side effects
             with patch("custom_components.family_bell.schedule_bells"):
@@ -80,8 +81,9 @@ async def test_setup_entry_panel_overwrite_error(hass: HomeAssistant):
         hass.http.async_register_static_paths = AsyncMock()
 
         # Mock OS path checks
-        with patch("os.path.isdir", return_value=True), \
-             patch("os.path.isfile", return_value=True):
+        with patch("os.path.isdir", return_value=True), patch(
+            "os.path.isfile", return_value=True
+        ):
 
             # Mock schedule_bells
             with patch("custom_components.family_bell.schedule_bells"):
