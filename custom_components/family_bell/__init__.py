@@ -131,9 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             StaticPathConfig(
                 "/family_bell/bell-tts-selector.js", path_selector, False
             ),
-            StaticPathConfig(
-                "/family_bell/lit-element.js", path_lit, False
-            ),
+            StaticPathConfig("/family_bell/lit-element.js", path_lit, False),
         ]
         try:
             await hass.http.async_register_static_paths(paths_to_register)
@@ -184,7 +182,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             _LOGGER.debug(
                 "Calling async_register_built_in_panel with: component_name='family-bell', "
                 "sidebar_title='Family Bell', sidebar_icon='mdi:bell', frontend_url_path='family-bell', "
-                "config=%s", panel_config
+                "config=%s",
+                panel_config,
             )
             async_register_built_in_panel(
                 hass,
