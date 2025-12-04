@@ -125,49 +125,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     _LOGGER.debug("Registering static path: %s -> %s", PANEL_URL, path)
 
-    paths_to_register = []
-
-    if StaticPathConfig:
-        paths_to_register.append(StaticPathConfig(PANEL_URL, path, False))
-        paths_to_register.append(
+    if hasattr(hass.http, "async_register_static_paths") and StaticPathConfig:
+        paths_to_register = [
+            StaticPathConfig(PANEL_URL, path, False),
             StaticPathConfig(
                 "/family_bell/bell-tts-selector.js", path_selector, False
-            )
-        )
-        paths_to_register.append(
-            StaticPathConfig("/family_bell/lit-element.js", path_lit, False)
-        )
+            ),
+            StaticPathConfig(
+                "/family_bell/lit-element.js", path_lit, False
+            ),
+        ]
+        try:
+            await hass.http.async_register_static_paths(paths_to_register)
+            _LOGGER.debug("Registered static paths (async)")
+        except RuntimeError:
+            _LOGGER.debug("Static paths already registered")
+        except Exception as e:
+            _LOGGER.error("Error registering static paths: %s", e)
     else:
-        paths_to_register.append(
-            {"url_path": PANEL_URL, "path": path, "cache_headers": False}
-        )
-        paths_to_register.append(
-            {
-                "url_path": "/family_bell/bell-tts-selector.js",
-                "path": path_selector,
-                "cache_headers": False,
-            }
-        )
-        paths_to_register.append(
-            {
-                "url_path": "/family_bell/lit-element.js",
-                "path": path_lit,
-                "cache_headers": False,
-            }
-        )
-
-    try:
-        await hass.http.async_register_static_paths(paths_to_register)
-        _LOGGER.debug(
-            "Successfully registered static paths: %s",
-            [p.url_path for p in paths_to_register]
-            if StaticPathConfig is not None
-            else [p["url_path"] for p in paths_to_register],
-        )
-    except RuntimeError:
-        _LOGGER.debug("Static paths already registered")
-    except Exception as e:
-        _LOGGER.error("Error registering static paths: %s", e)
+        # Fallback for legacy HA or if StaticPathConfig is missing
+        _LOGGER.debug("Using legacy static path registration")
+        try:
+            hass.http.register_static_path(PANEL_URL, path, False)
+            hass.http.register_static_path(
+                "/family_bell/bell-tts-selector.js", path_selector, False
+            )
+            hass.http.register_static_path(
+                "/family_bell/lit-element.js", path_lit, False
+            )
+        except AttributeError:
+            _LOGGER.error(
+                "Could not register static paths: neither async nor sync method available"
+            )
+        except Exception as e:
+            _LOGGER.error("Error registering static paths (legacy): %s", e)
 
     # 3. Register Sidebar Panel
     _LOGGER.debug("Registering sidebar panel")
