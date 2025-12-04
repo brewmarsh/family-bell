@@ -242,6 +242,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         if async_register_command:
             async_register_command(hass, ws_get_data)
             async_register_command(hass, ws_update_bell)
+            async_register_command(hass, ws_test_bell)
             async_register_command(hass, ws_delete_bell)
             async_register_command(hass, ws_update_vacation)
         else:
@@ -250,6 +251,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             )
             hass.components.websocket_api.async_register_command(
                 hass, ws_update_bell
+            )
+            hass.components.websocket_api.async_register_command(
+                hass, ws_test_bell
             )
             hass.components.websocket_api.async_register_command(
                 hass, ws_delete_bell
@@ -440,6 +444,66 @@ async def ws_update_bell(hass, connection, msg):
 
     await save_data(hass)
     connection.send_result(msg["id"], {"success": True})
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "family_bell/test_bell",
+        vol.Required("bell"): BELL_SCHEMA,
+    }
+)
+@websocket_api.async_response
+async def ws_test_bell(hass, connection, msg):
+    """Test a bell by playing it immediately."""
+    bell_data = msg["bell"]
+    entry_id = hass.data[DOMAIN]["entry_id"]
+    entry = hass.config_entries.async_get_entry(entry_id)
+
+    # Retrieve global TTS Settings
+    tts_provider = entry.options.get(
+        "tts_provider", entry.data.get("tts_provider")
+    )
+    tts_voice = entry.options.get("tts_voice", None)
+    tts_lang = entry.options.get("tts_language", "en")
+
+    # Use bell specific TTS if set, else global
+    provider = bell_data.get("tts_provider") or tts_provider
+    voice = bell_data.get("tts_voice") or tts_voice
+    lang = bell_data.get("tts_language") or tts_lang
+
+    if not provider:
+        connection.send_result(
+            msg["id"],
+            {
+                "success": False,
+                "error": {
+                    "code": "no_provider",
+                    "message": "No TTS provider configured.",
+                },
+            },
+        )
+        return
+
+    service_data = {
+        "entity_id": provider,
+        "message": bell_data["message"],
+        "language": lang,
+        "media_player_entity_id": bell_data["speakers"],
+    }
+    if voice:
+        service_data["options"] = {"voice": voice}
+
+    try:
+        await hass.services.async_call("tts", "speak", service_data)
+        connection.send_result(msg["id"], {"success": True})
+    except Exception as e:
+        connection.send_result(
+            msg["id"],
+            {
+                "success": False,
+                "error": {"code": "service_call_failed", "message": str(e)},
+            },
+        )
 
 
 @websocket_api.websocket_command(
