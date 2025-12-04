@@ -22,6 +22,8 @@ export class FamilyBellPanel extends LitElement {
       _newTTS: { type: Object },
       _globalTTS: { type: Object },
       _version: { type: String },
+      _editingBellId: { type: String },
+      _speakerFilter: { type: String },
     };
   }
 
@@ -34,6 +36,8 @@ export class FamilyBellPanel extends LitElement {
     this._newTTS = { provider: "", voice: "", language: "" };
     this._globalTTS = {};
     this._version = "unknown";
+    this._editingBellId = null;
+    this._speakerFilter = "";
   }
 
   firstUpdated() {
@@ -46,11 +50,6 @@ export class FamilyBellPanel extends LitElement {
 
   updated(changedProperties) {
     if (changedProperties.has("hass") && this.hass && !this.bells.length) {
-      // If hass just became available and we haven't loaded data, try fetching
-      // We check !this.bells.length as a simple heuristic, though ideally we'd track a _loaded flag
-      // But bells could legitimately be empty.
-      // Better: check if we successfully fetched.
-      // Let's use a flag.
       if (!this._dataFetched) {
          console.log("Family Bell: hass updated and data not fetched, retrying fetch");
          this.fetchData();
@@ -76,7 +75,7 @@ export class FamilyBellPanel extends LitElement {
       if (data.global_tts) {
         this._globalTTS = data.global_tts;
         // Set default for new bell if not set
-        if (!this._newTTS.provider) {
+        if (!this._newTTS.provider && !this._editingBellId) {
            this._newTTS = { ...data.global_tts };
         }
       }
@@ -88,7 +87,7 @@ export class FamilyBellPanel extends LitElement {
 
   getMediaPlayers() {
     if (!this.hass || !this.hass.states) return [];
-    return Object.keys(this.hass.states)
+    let players = Object.keys(this.hass.states)
       .filter((eid) => eid.startsWith("media_player."))
       .map((eid) => {
         return {
@@ -97,6 +96,12 @@ export class FamilyBellPanel extends LitElement {
         };
       })
       .sort((a, b) => a.name.localeCompare(b.name));
+
+    if (this._speakerFilter) {
+      const filter = this._speakerFilter.toLowerCase();
+      players = players.filter(p => p.name.toLowerCase().includes(filter) || p.id.toLowerCase().includes(filter));
+    }
+    return players;
   }
 
   render() {
@@ -117,6 +122,73 @@ export class FamilyBellPanel extends LitElement {
       <div class="container">
         <div class="header">
           <h1>🔔 Family Bell <span class="version">v${this._version}</span></h1>
+        </div>
+
+        <h3>Scheduled Bells</h3>
+        ${this.bells.length === 0 ? html`<p class="empty-state">No bells scheduled yet.</p>` : ""}
+        
+        ${this.bells.map((bell) => this.renderBellCard(bell))}
+
+        <div class="card add-card">
+          <h2>${this._editingBellId ? "✏️ Edit Bell" : "➕ Add New Bell"}</h2>
+          
+          <div class="row">
+            <input id="newTime" type="time" class="time-input" />
+            <input id="newMsg" type="text" placeholder="What should I say?" class="msg-input" />
+          </div>
+
+          <div class="section-label">TTS Settings:</div>
+          <bell-tts-selector
+            .hass=${this.hass}
+            .provider=${this._newTTS.provider}
+            .voice=${this._newTTS.voice}
+            .language=${this._newTTS.language}
+            @change=${this._handleTTSChange}
+          ></bell-tts-selector>
+
+          <div class="section-label">Days to Repeat:</div>
+          <div class="day-selector">
+            ${["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map(
+              (day) => html`
+                <span
+                  class="day-bubble ${this._newDays.includes(day) ? "selected" : ""}"
+                  @click=${() => this.toggleNewDay(day)}
+                >
+                  ${day.charAt(0).toUpperCase()}
+                </span>
+              `
+            )}
+          </div>
+
+          <div class="section-label">Select Speakers:</div>
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search speakers..."
+            .value=${this._speakerFilter}
+            @input=${(e) => this._speakerFilter = e.target.value}
+          />
+          <div class="speaker-list">
+            ${this.getMediaPlayers().map(
+              (player) => html`
+                <label class="checkbox-container">
+                  <input 
+                    type="checkbox" 
+                    value="${player.id}"
+                    .checked=${this._newSpeakers.includes(player.id)}
+                    @change=${(e) => this.toggleNewSpeaker(player.id, e.target.checked)}
+                  >
+                  ${player.name}
+                </label>
+              `
+            )}
+          </div>
+
+          <div class="action-buttons">
+            <button class="save-btn" @click=${this.addBell}>${this._editingBellId ? "Update Bell" : "Save Bell"}</button>
+            <button class="test-btn" @click=${this.testBell}>Test</button>
+            ${this._editingBellId ? html`<button class="cancel-btn" @click=${this.cancelEdit}>Cancel</button>` : ""}
+          </div>
         </div>
 
         <div class="card">
@@ -154,61 +226,6 @@ export class FamilyBellPanel extends LitElement {
             </div>
           </div>
         </div>
-
-        <h3>Scheduled Bells</h3>
-        ${this.bells.length === 0 ? html`<p class="empty-state">No bells scheduled yet.</p>` : ""}
-        
-        ${this.bells.map((bell) => this.renderBellCard(bell))}
-
-        <div class="card add-card">
-          <h2>➕ Add New Bell</h2>
-          
-          <div class="row">
-            <input id="newTime" type="time" class="time-input" />
-            <input id="newMsg" type="text" placeholder="What should I say?" class="msg-input" />
-          </div>
-
-          <div class="section-label">TTS Settings:</div>
-          <bell-tts-selector
-            .hass=${this.hass}
-            .provider=${this._newTTS.provider}
-            .voice=${this._newTTS.voice}
-            .language=${this._newTTS.language}
-            @change=${this._handleTTSChange}
-          ></bell-tts-selector>
-
-          <div class="section-label">Days to Repeat:</div>
-          <div class="day-selector">
-            ${["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map(
-              (day) => html`
-                <span
-                  class="day-bubble ${this._newDays.includes(day) ? "selected" : ""}"
-                  @click=${() => this.toggleNewDay(day)}
-                >
-                  ${day.charAt(0).toUpperCase()}
-                </span>
-              `
-            )}
-          </div>
-
-          <div class="section-label">Select Speakers:</div>
-          <div class="speaker-list">
-            ${this.getMediaPlayers().map(
-              (player) => html`
-                <label class="checkbox-container">
-                  <input 
-                    type="checkbox" 
-                    value="${player.id}"
-                    @change=${(e) => this.toggleNewSpeaker(player.id, e.target.checked)}
-                  >
-                  ${player.name}
-                </label>
-              `
-            )}
-          </div>
-
-          <button class="save-btn" @click=${this.addBell}>Save Bell</button>
-        </div>
       </div>
     `;
   }
@@ -235,6 +252,7 @@ export class FamilyBellPanel extends LitElement {
               />
               <span class="slider round"></span>
             </label>
+            <button class="icon-btn edit-btn" @click=${() => this.editBell(bell)}>✏️</button>
             <button class="icon-btn delete-btn" @click=${() => this.deleteBell(bell.id)}>🗑️</button>
         </div>
       </div>
@@ -283,8 +301,10 @@ export class FamilyBellPanel extends LitElement {
       return;
     }
 
+    const bellId = this._editingBellId ? this._editingBellId : Date.now().toString();
+
     const newBell = {
-      id: Date.now().toString(),
+      id: bellId,
       name: "Bell " + time,
       time: time,
       message: msg,
@@ -298,19 +318,79 @@ export class FamilyBellPanel extends LitElement {
 
     this.hass.callWS({ type: "family_bell/update_bell", bell: newBell }).then(() => {
       this.fetchData();
+      this.resetForm();
+    });
+  }
+
+  testBell() {
+      const time = this.shadowRoot.getElementById("newTime").value;
+      const msg = this.shadowRoot.getElementById("newMsg").value;
+
+      if (!msg || this._newSpeakers.length === 0) {
+        alert("Please enter a message and select at least one speaker to test.");
+        return;
+      }
+
+      const testBell = {
+        id: "test",
+        name: "Test Bell",
+        time: time || "00:00",
+        message: msg,
+        days: [],
+        speakers: this._newSpeakers,
+        enabled: true,
+        tts_provider: this._newTTS.provider,
+        tts_voice: this._newTTS.voice,
+        tts_language: this._newTTS.language,
+      };
+
+      this.hass.callWS({ type: "family_bell/test_bell", bell: testBell });
+  }
+
+  editBell(bell) {
+      this._editingBellId = bell.id;
+      this._newDays = bell.days;
+      this._newSpeakers = bell.speakers;
+      this._newTTS = {
+          provider: bell.tts_provider || this._globalTTS.provider,
+          voice: bell.tts_voice || this._globalTTS.voice,
+          language: bell.tts_language || this._globalTTS.language,
+      };
+
+      // Need to wait for update to populate input fields
+      this.requestUpdate();
+      this.updateComplete.then(() => {
+          this.shadowRoot.getElementById("newTime").value = bell.time;
+          this.shadowRoot.getElementById("newMsg").value = bell.message;
+          // Scroll to form
+          const form = this.shadowRoot.querySelector(".add-card");
+          if (form) form.scrollIntoView({ behavior: "smooth" });
+      });
+  }
+
+  cancelEdit() {
+      this.resetForm();
+  }
+
+  resetForm() {
+      this._editingBellId = null;
       this.shadowRoot.getElementById("newMsg").value = "";
+      this.shadowRoot.getElementById("newTime").value = "";
       this._newDays = [];
       this._newSpeakers = [];
-      // Reset TTS to global default
       this._newTTS = { ...this._globalTTS };
-      this.shadowRoot.querySelectorAll('.speaker-list input').forEach(el => el.checked = false);
+      this._speakerFilter = "";
       this.requestUpdate();
-    });
   }
 
   deleteBell(id) {
     if (!confirm("Delete this bell?")) return;
-    this.hass.callWS({ type: "family_bell/delete_bell", bell_id: id }).then(() => this.fetchData());
+    this.hass.callWS({ type: "family_bell/delete_bell", bell_id: id }).then(() => {
+        this.fetchData();
+        if (this._editingBellId === id) {
+            this.resetForm();
+        }
+    });
   }
 
   static get styles() {
@@ -354,6 +434,7 @@ export class FamilyBellPanel extends LitElement {
       }
       .time-input { flex: 0 0 100px; }
       .msg-input { flex: 1; }
+      .search-input { width: 100%; box-sizing: border-box; margin-bottom: 10px; }
 
       .day-selector { display: flex; gap: 8px; margin-bottom: 15px; justify-content: center; }
       .day-bubble {
@@ -382,8 +463,9 @@ export class FamilyBellPanel extends LitElement {
       }
       .checkbox-container { display: block; padding: 5px 0; cursor: pointer; }
       
+      .action-buttons { display: flex; gap: 10px; }
       .save-btn {
-        width: 100%;
+        flex: 2;
         padding: 12px;
         background: var(--primary-color);
         color: white;
@@ -393,7 +475,31 @@ export class FamilyBellPanel extends LitElement {
         cursor: pointer;
         font-weight: bold;
       }
-      .delete-btn { background: none; border: none; cursor: pointer; font-size: 20px; }
+      .test-btn {
+        flex: 1;
+        padding: 12px;
+        background: var(--info-color, #2196F3);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      .cancel-btn {
+        flex: 1;
+        padding: 12px;
+        background: var(--secondary-background-color);
+        color: var(--primary-text-color);
+        border: 1px solid var(--divider-color);
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+
+      .icon-btn { background: none; border: none; cursor: pointer; font-size: 20px; padding: 4px; }
+      .edit-btn { margin-right: 5px; }
 
       .switch { position: relative; display: inline-block; width: 50px; height: 24px; }
       .switch input { opacity: 0; width: 0; height: 0; }
