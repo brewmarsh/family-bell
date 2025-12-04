@@ -103,4 +103,5 @@ async def test_setup_entry_panel_overwrite_error(hass: HomeAssistant):
     # Assertions
     # If the fix works, result should be True (setup succeeds despite error)
     assert result is True
+    assert mock_add_js.called
     assert mock_register.called
