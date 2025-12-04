@@ -24,7 +24,9 @@ async def test_setup_entry_panel_conflict(hass: HomeAssistant):
     # Mock async_register_built_in_panel
     with patch(
         "custom_components.family_bell.async_register_built_in_panel",
-    ) as mock_register:
+    ) as mock_register, patch(
+        "custom_components.family_bell.add_extra_js_url"
+    ) as mock_add_js:
 
         # Mock hass.http.async_register_static_paths as it is awaited
         hass.http = MagicMock()
@@ -43,13 +45,15 @@ async def test_setup_entry_panel_conflict(hass: HomeAssistant):
 
         # Assertions
         assert result is True
+        expected_url = f"{PANEL_URL}?v=unknown"
+        mock_add_js.assert_called_once_with(hass, expected_url)
         mock_register.assert_called_once_with(
             hass,
             component_name="family-bell",
             sidebar_title="Family Bell",
             sidebar_icon="mdi:bell",
             frontend_url_path="family-bell",
-            config={"module_url": PANEL_URL},
+            config={"module_url": expected_url},
             require_admin=True,
             update=True,
         )
@@ -74,7 +78,9 @@ async def test_setup_entry_panel_overwrite_error(hass: HomeAssistant):
     with patch(
         "custom_components.family_bell.async_register_built_in_panel",
         side_effect=ValueError("Overwriting panel family-bell"),
-    ) as mock_register:
+    ) as mock_register, patch(
+        "custom_components.family_bell.add_extra_js_url"
+    ) as mock_add_js:
 
         # Mock hass.http.async_register_static_paths as it is awaited
         hass.http = MagicMock()
@@ -98,4 +104,5 @@ async def test_setup_entry_panel_overwrite_error(hass: HomeAssistant):
     # Assertions
     # If the fix works, result should be True (setup succeeds despite error)
     assert result is True
+    assert mock_add_js.called
     assert mock_register.called
