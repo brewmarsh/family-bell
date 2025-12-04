@@ -5,8 +5,11 @@ import {
 } from "./lit-element.js";
 import "./bell-tts-selector.js";
 
-console.log("Family Bell: Loading family_bell_panel.js");
-console.warn("Family Bell: Loading family_bell_panel.js (DEBUG LOG)");
+console.info(
+  `%c 🔔 Family Bell 🔔 %c ${new URL(import.meta.url).searchParams.get("v") || "unknown"}`,
+  "color: white; background: #e0ab0a; font-weight: 700; padding: 2px 4px; border-radius: 4px;",
+  "color: #e0ab0a; font-weight: 700;"
+);
 
 export class FamilyBellPanel extends LitElement {
   static get properties() {
