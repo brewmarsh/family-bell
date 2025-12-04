@@ -131,9 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             StaticPathConfig(
                 "/family_bell/bell-tts-selector.js", path_selector, False
             ),
-            StaticPathConfig(
-                "/family_bell/lit-element.js", path_lit, False
-            ),
+            StaticPathConfig("/family_bell/lit-element.js", path_lit, False),
         ]
         try:
             await hass.http.async_register_static_paths(paths_to_register)
@@ -184,7 +182,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             _LOGGER.debug(
                 "Calling async_register_built_in_panel with: component_name='family-bell', "
                 "sidebar_title='Family Bell', sidebar_icon='mdi:bell', frontend_url_path='family-bell', "
-                "config=%s", panel_config
+                "config=%s",
+                panel_config,
             )
             async_register_built_in_panel(
                 hass,
@@ -197,6 +196,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 update=True,
             )
             _LOGGER.debug("Registered built-in panel")
+
+            # Verify registration
+            panels = hass.data.get("frontend_panels", {})
+            if "family-bell" in panels:
+                _LOGGER.debug(
+                    "Panel 'family-bell' confirmed in frontend_panels. Config: %s",
+                    panels["family-bell"],
+                )
+            else:
+                _LOGGER.error(
+                    "Panel 'family-bell' NOT found in frontend_panels after registration!"
+                )
         else:
             # Fallback for older HA
             if hasattr(hass.components.frontend, "async_remove_panel"):
