@@ -22,10 +22,12 @@ except ImportError:
 
 try:
     from homeassistant.components.frontend import (
+        add_extra_js_url,
         async_register_built_in_panel,
         async_remove_panel,
     )
 except ImportError:
+    add_extra_js_url = None
     async_register_built_in_panel = None
     async_remove_panel = None
 from homeassistant.helpers.event import async_track_point_in_utc_time
