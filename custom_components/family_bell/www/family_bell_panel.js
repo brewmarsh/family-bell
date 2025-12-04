@@ -27,9 +27,6 @@ export class FamilyBellPanel extends LitElement {
 
   constructor() {
     super();
-    console.error("Family Bell: Constructor called (ERROR LOG)");
-    console.log("Family Bell: Constructor called");
-    console.warn("Family Bell: Constructor called (DEBUG LOG)");
     this.bells = [];
     this.vacation = { enabled: false, start: "", end: "" };
     this._newDays = [];
@@ -40,16 +37,11 @@ export class FamilyBellPanel extends LitElement {
   }
 
   firstUpdated() {
-    console.error("Family Bell: firstUpdated called (ERROR LOG)");
-    console.log("Family Bell: firstUpdated called");
-    console.warn("Family Bell: firstUpdated called (DEBUG LOG)");
     this.fetchData();
   }
 
   connectedCallback() {
       super.connectedCallback();
-      console.error("Family Bell: connectedCallback called (ERROR LOG)");
-      console.log("Family Bell: connectedCallback called");
   }
 
   updated(changedProperties) {
@@ -108,10 +100,7 @@ export class FamilyBellPanel extends LitElement {
   }
 
   render() {
-    console.error("Family Bell: Render called (ERROR LOG)");
-    console.log("Family Bell: Render called");
     if (!this.hass) {
-        console.error("Family Bell: hass is missing in render");
         return html`
             <div class="container">
                 <div class="header">
@@ -119,7 +108,6 @@ export class FamilyBellPanel extends LitElement {
                 </div>
                 <div class="card">
                     <p>Loading Home Assistant connection...</p>
-                    <p>DEBUG: hass object is missing</p>
                 </div>
             </div>
         `;
@@ -334,7 +322,6 @@ export class FamilyBellPanel extends LitElement {
         color: var(--primary-text-color);
         font-family: var(--paper-font-body1_-_font-family);
         min-height: 100vh;
-        border: 5px solid red; /* DEBUG: Visual verification */
       }
       .container { max-width: 600px; margin: 0 auto; padding-bottom: 50px;}
       h1, h2, h3 { margin-top: 0; font-weight: normal; }

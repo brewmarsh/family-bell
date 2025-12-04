@@ -82,13 +82,9 @@ export class BellTTSSelector extends LitElement {
     // Try WebSocket command if available (speculative but requested)
     // We try 'tts/voices' which might not exist, catch error.
     // Some integrations use 'tts_get_voices' service? No.
-    try {
-        // This is a guess at a command name, or maybe we just don't populate if not standard
-        // But the user asked for "installed in the system".
-        // We will leave it empty if we can't find them.
-    } catch (e) {
-        console.log("Error fetching voices", e);
-    }
+    // This is a guess at a command name, or maybe we just don't populate if not standard
+    // But the user asked for "installed in the system".
+    // We will leave it empty if we can't find them.
   }
 
   _handleProviderChange(e) {
