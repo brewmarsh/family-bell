@@ -22,10 +22,12 @@ except ImportError:
 
 try:
     from homeassistant.components.frontend import (
+        add_extra_js_url,
         async_register_built_in_panel,
         async_remove_panel,
     )
 except ImportError:
+    add_extra_js_url = None
     async_register_built_in_panel = None
     async_remove_panel = None
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -162,9 +164,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     try:
         if async_register_built_in_panel:
+            # First, ensure the JS is loaded since async_register_built_in_panel
+            # doesn't handle external module loading automatically.
+            if add_extra_js_url:
+                add_extra_js_url(hass, PANEL_URL)
+                _LOGGER.debug("Registered extra JS URL: %s", PANEL_URL)
+            else:
+                _LOGGER.warning("add_extra_js_url not available, panel may not load")
+
             # We must use 'family-bell' to match the custom element tag name
             # defined in the JS.
-            # 'module_url' tells the frontend where to load it from.
             panel_config = {"module_url": PANEL_URL}
             _LOGGER.debug(
                 "Calling async_register_built_in_panel with: component_name='family-bell', "
