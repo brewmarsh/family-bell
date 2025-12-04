@@ -101,9 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     }
 
     # 2. Register Static Paths for Frontend
-    frontend_dir = hass.config.path(
-        "custom_components/family_bell/frontend"
-    )
+    frontend_dir = hass.config.path("custom_components/family_bell/frontend")
 
     # Check if directory exists
     if not os.path.isdir(frontend_dir):
