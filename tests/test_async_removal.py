@@ -40,7 +40,9 @@ async def test_setup_entry_panel_removal_await(hass: HomeAssistant):
         side_effect=mock_remove,
     ) as mock_remove_panel, patch(
         "custom_components.family_bell.async_register_built_in_panel",
-    ) as mock_register:
+    ) as mock_register, patch(
+        "custom_components.family_bell.add_extra_js_url"
+    ):
 
         # Mock hass.http.async_register_static_paths as it is awaited
         hass.http = MagicMock()
