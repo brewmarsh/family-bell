@@ -117,7 +117,7 @@ def main():
     if os.environ.get('GITHUB_OUTPUT'):
         with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
             f.write(f"new_version={new_version}\n")
-            f.write(f"bump_occurred=true\n")
+            f.write("bump_occurred=true\n")
 
 if __name__ == "__main__":
     main()

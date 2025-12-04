@@ -3,6 +3,7 @@ import datetime
 import voluptuous as vol
 import inspect
 import json
+import os
 
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
@@ -110,6 +111,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         "custom_components/family_bell/frontend/lit-element.js"
     )
 
+    # Check if files exist
+    if not os.path.isfile(path):
+        _LOGGER.error("Frontend file not found at path: %s", path)
+    else:
+        _LOGGER.debug("Frontend file confirmed at: %s", path)
+
+    if not os.path.isfile(path_selector):
+        _LOGGER.error("Frontend file not found at path: %s", path_selector)
+
+    if not os.path.isfile(path_lit):
+        _LOGGER.error("Frontend file not found at path: %s", path_lit)
+
     _LOGGER.debug("Registering static path: %s -> %s", PANEL_URL, path)
 
     paths_to_register = []
@@ -145,8 +158,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     try:
         await hass.http.async_register_static_paths(paths_to_register)
+        _LOGGER.debug(
+            "Successfully registered static paths: %s",
+            [p.url_path for p in paths_to_register]
+            if StaticPathConfig is not None
+            else [p["url_path"] for p in paths_to_register],
+        )
     except RuntimeError:
         _LOGGER.debug("Static paths already registered")
+    except Exception as e:
+        _LOGGER.error("Error registering static paths: %s", e)
 
     # 3. Register Sidebar Panel
     _LOGGER.debug("Registering sidebar panel")
@@ -162,18 +183,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     res = async_remove_panel(hass, panel_id)
                     if inspect.isawaitable(res):
                         await res
+                    _LOGGER.debug("Removed existing panel: %s", panel_id)
                 except Exception as ex:
                     _LOGGER.debug("Error removing panel %s: %s", panel_id, ex)
 
     try:
         if async_register_built_in_panel:
+            panel_config = {"module_url": PANEL_URL, "embed_iframe": False}
+            _LOGGER.debug(
+                "Calling async_register_built_in_panel with: component_name='family-bell', "
+                "sidebar_title='Family Bell', sidebar_icon='mdi:bell', frontend_url_path='family-bell', "
+                "config=%s", panel_config
+            )
             async_register_built_in_panel(
                 hass,
                 component_name="family-bell",
                 sidebar_title="Family Bell",
                 sidebar_icon="mdi:bell",
                 frontend_url_path="family-bell",
-                config={"module_url": PANEL_URL, "embed_iframe": False},
+                config=panel_config,
                 require_admin=True,
                 update=True,
             )
