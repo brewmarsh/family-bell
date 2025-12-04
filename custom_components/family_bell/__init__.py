@@ -170,7 +170,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 add_extra_js_url(hass, PANEL_URL)
                 _LOGGER.debug("Registered extra JS URL: %s", PANEL_URL)
             else:
-                _LOGGER.warning("add_extra_js_url not available, panel may not load")
+                _LOGGER.warning(
+                    "add_extra_js_url not available, panel may not load"
+                )
 
             # We must use 'family-bell' to match the custom element tag name
             # defined in the JS.
