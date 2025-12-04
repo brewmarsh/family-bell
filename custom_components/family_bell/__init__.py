@@ -101,13 +101,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     }
 
     # 2. Register Static Paths for Frontend
-    frontend_dir = hass.config.path("custom_components/family_bell/frontend")
+    # Use 'www' convention
+    frontend_dir = hass.config.path("custom_components/family_bell/www")
 
     # Check if directory exists
     if not os.path.isdir(frontend_dir):
         _LOGGER.error("Frontend directory not found at path: %s", frontend_dir)
+        return False
     else:
         _LOGGER.debug("Frontend directory confirmed at: %s", frontend_dir)
+
+    # Verify the panel file exists
+    panel_file = os.path.join(frontend_dir, "family_bell_panel.js")
+    if not os.path.isfile(panel_file):
+        _LOGGER.error("Panel file not found at path: %s", panel_file)
+        return False
 
     _LOGGER.debug("Registering static path: /family_bell -> %s", frontend_dir)
 
@@ -154,7 +162,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     try:
         if async_register_built_in_panel:
-            panel_config = {"module_url": PANEL_URL, "embed_iframe": False}
+            # We must use 'family-bell' to match the custom element tag name
+            # defined in the JS.
+            # 'module_url' tells the frontend where to load it from.
+            panel_config = {"module_url": PANEL_URL}
             _LOGGER.debug(
                 "Calling async_register_built_in_panel with: component_name='family-bell', "
                 "sidebar_title='Family Bell', sidebar_icon='mdi:bell', frontend_url_path='family-bell', "

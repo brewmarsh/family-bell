@@ -30,11 +30,15 @@ async def test_setup_entry_panel_conflict(hass: HomeAssistant):
         hass.http = MagicMock()
         hass.http.async_register_static_paths = AsyncMock()
 
-        # Mock schedule_bells to simplify test and avoid side effects
-        with patch("custom_components.family_bell.schedule_bells"):
+        # Mock OS path checks to pretend frontend files exist
+        with patch("os.path.isdir", return_value=True), \
+             patch("os.path.isfile", return_value=True):
 
-            # Call setup
-            result = await async_setup_entry(hass, entry)
+            # Mock schedule_bells to simplify test and avoid side effects
+            with patch("custom_components.family_bell.schedule_bells"):
+
+                # Call setup
+                result = await async_setup_entry(hass, entry)
 
         # Assertions
         assert result is True
@@ -44,7 +48,7 @@ async def test_setup_entry_panel_conflict(hass: HomeAssistant):
             sidebar_title="Family Bell",
             sidebar_icon="mdi:bell",
             frontend_url_path="family-bell",
-            config={"module_url": PANEL_URL, "embed_iframe": False},
+            config={"module_url": PANEL_URL},
             require_admin=True,
             update=True,
         )
@@ -75,15 +79,19 @@ async def test_setup_entry_panel_overwrite_error(hass: HomeAssistant):
         hass.http = MagicMock()
         hass.http.async_register_static_paths = AsyncMock()
 
-        # Mock schedule_bells
-        with patch("custom_components.family_bell.schedule_bells"):
-            # Mock async_remove_panel to do nothing (simulate failure to remove)
-            with patch(
-                "custom_components.family_bell.async_remove_panel",
-                new=AsyncMock(),
-            ):
-                # Call setup
-                result = await async_setup_entry(hass, entry)
+        # Mock OS path checks
+        with patch("os.path.isdir", return_value=True), \
+             patch("os.path.isfile", return_value=True):
+
+            # Mock schedule_bells
+            with patch("custom_components.family_bell.schedule_bells"):
+                # Mock async_remove_panel to do nothing (simulate failure to remove)
+                with patch(
+                    "custom_components.family_bell.async_remove_panel",
+                    new=AsyncMock(),
+                ):
+                    # Call setup
+                    result = await async_setup_entry(hass, entry)
 
     # Assertions
     # If the fix works, result should be True (setup succeeds despite error)

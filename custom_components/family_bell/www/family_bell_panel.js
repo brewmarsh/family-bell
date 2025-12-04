@@ -5,10 +5,10 @@ import {
 } from "./lit-element.js";
 import "./bell-tts-selector.js";
 
-console.log("Family Bell: Loaded family_bell_panel.js");
-console.warn("Family Bell: Loaded family_bell_panel.js (DEBUG LOG)");
+console.log("Family Bell: Loading family_bell_panel.js");
+console.warn("Family Bell: Loading family_bell_panel.js (DEBUG LOG)");
 
-class FamilyBellPanel extends LitElement {
+export class FamilyBellPanel extends LitElement {
   static get properties() {
     return {
       hass: { type: Object },
