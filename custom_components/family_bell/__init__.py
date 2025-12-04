@@ -101,37 +101,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     }
 
     # 2. Register Static Paths for Frontend
-    path = hass.config.path(
-        "custom_components/family_bell/frontend/family_bell_panel.js"
-    )
-    path_selector = hass.config.path(
-        "custom_components/family_bell/frontend/bell-tts-selector.js"
-    )
-    path_lit = hass.config.path(
-        "custom_components/family_bell/frontend/lit-element.js"
+    frontend_dir = hass.config.path(
+        "custom_components/family_bell/frontend"
     )
 
-    # Check if files exist
-    if not os.path.isfile(path):
-        _LOGGER.error("Frontend file not found at path: %s", path)
+    # Check if directory exists
+    if not os.path.isdir(frontend_dir):
+        _LOGGER.error("Frontend directory not found at path: %s", frontend_dir)
     else:
-        _LOGGER.debug("Frontend file confirmed at: %s", path)
+        _LOGGER.debug("Frontend directory confirmed at: %s", frontend_dir)
 
-    if not os.path.isfile(path_selector):
-        _LOGGER.error("Frontend file not found at path: %s", path_selector)
-
-    if not os.path.isfile(path_lit):
-        _LOGGER.error("Frontend file not found at path: %s", path_lit)
-
-    _LOGGER.debug("Registering static path: %s -> %s", PANEL_URL, path)
+    _LOGGER.debug("Registering static path: /family_bell -> %s", frontend_dir)
 
     if hasattr(hass.http, "async_register_static_paths") and StaticPathConfig:
         paths_to_register = [
-            StaticPathConfig(PANEL_URL, path, False),
-            StaticPathConfig(
-                "/family_bell/bell-tts-selector.js", path_selector, False
-            ),
-            StaticPathConfig("/family_bell/lit-element.js", path_lit, False),
+            StaticPathConfig("/family_bell", frontend_dir, False),
         ]
         try:
             await hass.http.async_register_static_paths(paths_to_register)
@@ -144,13 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         # Fallback for legacy HA or if StaticPathConfig is missing
         _LOGGER.debug("Using legacy static path registration")
         try:
-            hass.http.register_static_path(PANEL_URL, path, False)
-            hass.http.register_static_path(
-                "/family_bell/bell-tts-selector.js", path_selector, False
-            )
-            hass.http.register_static_path(
-                "/family_bell/lit-element.js", path_lit, False
-            )
+            hass.http.register_static_path("/family_bell", frontend_dir, False)
         except AttributeError:
             _LOGGER.error(
                 "Could not register static paths: neither async nor sync method available"
