@@ -197,6 +197,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 update=True,
             )
             _LOGGER.debug("Registered built-in panel")
+
+            # Verify registration
+            panels = hass.data.get("frontend_panels", {})
+            if "family-bell" in panels:
+                _LOGGER.debug(
+                    "Panel 'family-bell' confirmed in frontend_panels. Config: %s",
+                    panels["family-bell"],
+                )
+            else:
+                _LOGGER.error(
+                    "Panel 'family-bell' NOT found in frontend_panels after registration!"
+                )
         else:
             # Fallback for older HA
             if hasattr(hass.components.frontend, "async_remove_panel"):
