@@ -46,11 +46,16 @@ async def test_setup_entry_panel_removal_await(hass: HomeAssistant):
         hass.http = MagicMock()
         hass.http.async_register_static_paths = AsyncMock()
 
-        # Mock schedule_bells to simplify test and avoid side effects
-        with patch("custom_components.family_bell.schedule_bells"):
+        # Mock OS path checks to pretend frontend files exist
+        with patch("os.path.isdir", return_value=True), patch(
+            "os.path.isfile", return_value=True
+        ):
 
-            # Call setup
-            result = await async_setup_entry(hass, entry)
+            # Mock schedule_bells to simplify test and avoid side effects
+            with patch("custom_components.family_bell.schedule_bells"):
+
+                # Call setup
+                result = await async_setup_entry(hass, entry)
 
         # Assertions
         assert result is True
