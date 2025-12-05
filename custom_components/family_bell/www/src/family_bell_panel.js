@@ -7,6 +7,7 @@ import {
 import "./vacation-card.js";
 import "./bell-card.js";
 import "./add-bell-card.js";
+import { localize } from "./localize.js";
 
 class FamilyBellPanel extends LitElement {
   static get properties() {
@@ -45,13 +46,13 @@ class FamilyBellPanel extends LitElement {
     return html`
       <div class="container">
         <div class="header">
-          <h1>🔔 Family Bell</h1>
+          <h1>🔔 ${localize("header", this.hass)}</h1>
         </div>
 
         <vacation-card .hass=${this.hass} .vacation=${this.vacation}></vacation-card>
 
-        <h3>Scheduled Bells</h3>
-        ${this.bells.length === 0 ? html`<p class="empty-state">No bells scheduled yet.</p>` : ""}
+        <h3>${localize("scheduled_bells", this.hass)}</h3>
+        ${this.bells.length === 0 ? html`<p class="empty-state">${localize("no_bells", this.hass)}</p>` : ""}
 
         ${this.bells.map((bell) => html`<bell-card .hass=${this.hass} .bell=${bell}></bell-card>`)}
 

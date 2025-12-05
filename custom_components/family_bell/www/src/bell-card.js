@@ -3,6 +3,7 @@ import {
   html,
   css,
 } from "https://unpkg.com/lit-element@2.4.0/lit-element.js?module";
+import { localize } from "./localize.js";
 
 class BellCard extends LitElement {
   static get properties() {
@@ -45,10 +46,10 @@ class BellCard extends LitElement {
           <div class="bell-time">${this.bell.time}</div>
           <div class="bell-msg">${this.bell.message}</div>
           <div class="bell-days">
-            ${this.bell.days.map(d => d.toUpperCase().slice(0,3)).join(" · ")}
+            ${this.bell.days.map(d => localize(`days.${d}`, this.hass)).join(" · ")}
           </div>
           <div class="bell-speakers">
-            📢 ${this.bell.speakers.length} Speaker(s)
+            📢 ${this.bell.speakers.length} ${localize("speakers", this.hass)}
           </div>
         </div>
         <div class="bell-actions">
@@ -72,7 +73,7 @@ class BellCard extends LitElement {
   }
 
   deleteBell() {
-    if (!confirm("Delete this bell?")) return;
+    if (!confirm(localize("delete_confirm", this.hass))) return;
     this.hass.callWS({ type: "family_bell/delete_bell", bell_id: this.bell.id });
   }
 

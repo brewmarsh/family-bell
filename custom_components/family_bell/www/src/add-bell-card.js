@@ -3,6 +3,7 @@ import {
   html,
   css,
 } from "https://unpkg.com/lit-element@2.4.0/lit-element.js?module";
+import { localize } from "./localize.js";
 
 class AddBellCard extends LitElement {
   static get properties() {
@@ -95,14 +96,14 @@ class AddBellCard extends LitElement {
   render() {
     return html`
       <div class="card add-card">
-        <h2>➕ Add New Bell</h2>
+        <h2>➕ ${localize("add_new_bell", this.hass)}</h2>
 
         <div class="row">
           <input id="newTime" type="time" class="time-input" />
-          <input id="newMsg" type="text" placeholder="What should I say?" class="msg-input" />
+          <input id="newMsg" type="text" placeholder="${localize("what_to_say", this.hass)}" class="msg-input" />
         </div>
 
-        <div class="section-label">Days to Repeat:</div>
+        <div class="section-label">${localize("days_to_repeat", this.hass)}</div>
         <div class="day-selector">
           ${["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map(
             (day) => html`
@@ -110,13 +111,13 @@ class AddBellCard extends LitElement {
                 class="day-bubble ${this._newDays.includes(day) ? "selected" : ""}"
                 @click=${() => this.toggleNewDay(day)}
               >
-                ${day.charAt(0).toUpperCase()}
+                ${localize(`days_short.${day}`, this.hass)}
               </span>
             `
           )}
         </div>
 
-        <div class="section-label">Select Speakers:</div>
+        <div class="section-label">${localize("select_speakers", this.hass)}</div>
         <div class="speaker-list">
           ${this.getMediaPlayers().map(
             (player) => html`
@@ -132,7 +133,7 @@ class AddBellCard extends LitElement {
           )}
         </div>
 
-        <button class="save-btn" @click=${this.addBell}>Save Bell</button>
+        <button class="save-btn" @click=${this.addBell}>${localize("save_bell", this.hass)}</button>
       </div>
     `;
   }
@@ -159,7 +160,7 @@ class AddBellCard extends LitElement {
     const msg = this.shadowRoot.getElementById("newMsg").value;
 
     if (!time || !msg || this._newDays.length === 0 || this._newSpeakers.length === 0) {
-      alert("Please fill in time, message, select at least one day and one speaker.");
+      alert(localize("missing_fields", this.hass));
       return;
     }
 
