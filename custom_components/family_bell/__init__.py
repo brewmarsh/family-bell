@@ -375,9 +375,10 @@ async def schedule_bells(hass, entry):
                     service_data = {
                         "entity_id": provider,
                         "message": bell_data["message"],
-                        "language": lang,
                         "media_player_entity_id": bell_data["speakers"],
                     }
+                    if lang:
+                        service_data["language"] = lang
                     if voice:
                         service_data["options"] = {"voice": voice}
 
@@ -487,9 +488,10 @@ async def ws_test_bell(hass, connection, msg):
     service_data = {
         "entity_id": provider,
         "message": bell_data["message"],
-        "language": lang,
         "media_player_entity_id": bell_data["speakers"],
     }
+    if lang:
+        service_data["language"] = lang
     if voice:
         service_data["options"] = {"voice": voice}
 

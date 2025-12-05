@@ -31,11 +31,15 @@ export class BellTTSSelector extends LitElement {
     this._fetchProviders();
   }
 
-  updated(changedProperties) {
-    if (changedProperties.has("hass") && this.hass && this._providers.length === 0) {
-      this._fetchProviders();
+  willUpdate(changedProperties) {
+    if (changedProperties.has("hass") && this.hass) {
+        // If hass changes, and we don't have providers, fetch them.
+        if (this._providers.length === 0) {
+            this._fetchProviders();
+        }
     }
     if (changedProperties.has("provider")) {
+      console.log("Provider changed to", this.provider);
       this._updateLanguages(this.provider);
       this._fetchVoices(this.provider);
     }
@@ -51,15 +55,26 @@ export class BellTTSSelector extends LitElement {
         languages: this.hass.states[eid].attributes.supported_languages || [],
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
+
+    // Force requestUpdate because _providers is internal but we want to re-render
+    // Actually it's a property so setting it should trigger update if changed.
+    // BUT we are creating a new array, so it is changed.
+    // However, if we are inside willUpdate (called from update), changing a property might cause another update?
+    // _fetchProviders is called in willUpdate -> sets _providers -> triggers update?
+    // Be careful of infinite loops.
+    // But _fetchProviders only runs if _providers.length === 0.
   }
 
   _updateLanguages(providerId) {
     const provider = this._providers.find((p) => p.id === providerId);
     this._languages = provider ? provider.languages : [];
+    console.log("Updated languages:", this._languages);
 
     // Reset language if current is not supported, or default to first
     if (this._languages.length > 0 && !this._languages.includes(this.language)) {
-        // Ideally we don't auto-change unless necessary, but let's keep it simple
+      console.log("Current language", this.language, "not in supported. Auto-selecting", this._languages[0]);
+      this.language = this._languages[0];
+      this._dispatchChange();
     }
   }
 
