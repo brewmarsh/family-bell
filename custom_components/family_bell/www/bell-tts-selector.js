@@ -31,7 +31,7 @@ export class BellTTSSelector extends LitElement {
     this._fetchProviders();
   }
 
-  willUpdate(changedProperties) {
+  updated(changedProperties) {
     if (changedProperties.has("hass") && this.hass) {
         // If hass changes, and we don't have providers, fetch them.
         if (this._providers.length === 0) {
@@ -40,8 +40,6 @@ export class BellTTSSelector extends LitElement {
     }
     if (changedProperties.has("provider")) {
       // If provider changed, fetch languages and voices
-      // Check if it actually changed to avoid loop if strict equality
-      // provider property update triggers this.
       this._updateLanguages(this.provider);
       this._fetchVoices(this.provider);
     }
@@ -57,6 +55,7 @@ export class BellTTSSelector extends LitElement {
         languages: this.hass.states[eid].attributes.supported_languages || [],
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
+    this.requestUpdate();
   }
 
   _updateLanguages(providerId) {
@@ -85,7 +84,8 @@ export class BellTTSSelector extends LitElement {
         if (result && result.voices) {
             this._voices = result.voices.map(v => ({
                 id: v.voice_id,
-                name: v.name || v.voice_id
+                name: v.name || v.voice_id,
+                language: v.language,
             }));
             fetched = true;
         }
@@ -100,6 +100,7 @@ export class BellTTSSelector extends LitElement {
              this._voices = state.attributes.voices.map(v => ({
                  id: v,
                  name: v
+                 // language is undefined for fallback string list
              }));
          }
     }
@@ -148,7 +149,7 @@ export class BellTTSSelector extends LitElement {
           >
             <option value="">Default (Global)</option>
             ${this._providers.map(
-              (p) => html`<option value="${p.id}">${p.name}</option>`
+              (p) => html`<option value="${p.id}" ?selected=${p.id === this.provider}>${p.name}</option>`
             )}
           </select>
         </div>
@@ -165,7 +166,7 @@ export class BellTTSSelector extends LitElement {
                 >
                    <option value="">Default</option>
                   ${this._languages.map(
-                    (l) => html`<option value="${l}">${l}</option>`
+                    (l) => html`<option value="${l}" ?selected=${l === this.language}>${l}</option>`
                   )}
                 </select>
               </div>
@@ -188,18 +189,35 @@ export class BellTTSSelector extends LitElement {
 
         <div class="input-group">
           <label>Voice</label>
-          <input
-            type="text"
-            .value=${this.voice}
-            list="voices"
-            @change=${this._handleVoiceChange}
-            placeholder="Optional"
-          />
-          <datalist id="voices">
-            ${this._voices.map(
-              (v) => html`<option value="${v.id}">${v.name}</option>`
-            )}
-          </datalist>
+          ${this._voices.length > 0
+            ? html`
+                <select .value=${this.voice} @change=${this._handleVoiceChange}>
+                  <option value="">Default</option>
+                  ${this._voices
+                    .filter(
+                      (v) =>
+                        !this.language || !v.language || v.language === this.language
+                    )
+                    .map(
+                      (v) =>
+                        html`<option value="${v.id}" ?selected=${v.id === this.voice}>${v.name}</option>`
+                    )}
+                </select>
+              `
+            : html`
+                <input
+                  type="text"
+                  .value=${this.voice}
+                  list="voices"
+                  @change=${this._handleVoiceChange}
+                  placeholder="Optional"
+                />
+                <datalist id="voices">
+                  ${this._voices.map(
+                    (v) => html`<option value="${v.id}">${v.name}</option>`
+                  )}
+                </datalist>
+              `}
         </div>
       </div>
     `;
