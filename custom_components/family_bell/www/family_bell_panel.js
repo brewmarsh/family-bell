@@ -21,6 +21,7 @@ export class FamilyBellPanel extends LitElement {
       _newSpeakers: { type: Array },
       _newTTS: { type: Object },
       _newSound: { type: Object }, // Can be String or Object
+      _newSoundEnabled: { type: Boolean },
       _globalTTS: { type: Object },
       _version: { type: String },
       _editingBellId: { type: String },
@@ -36,6 +37,7 @@ export class FamilyBellPanel extends LitElement {
     this._newSpeakers = [];
     this._newTTS = { provider: "", voice: "", language: "" };
     this._newSound = "";
+    this._newSoundEnabled = false;
     this._globalTTS = {};
     this._version = "unknown";
     this._editingBellId = null;
@@ -139,29 +141,42 @@ export class FamilyBellPanel extends LitElement {
             <input id="newMsg" type="text" placeholder="What should I say?" class="msg-input" />
           </div>
 
+          <div class="section-label">Pre-announcement sound:</div>
           <div class="row">
-             ${customElements.get("ha-selector") ? html`
-                <div class="input-group">
-                 <label>Pre-announcement sound</label>
-                 <ha-selector
-                    .hass=${this.hass}
-                    .selector=${{ media: {} }}
-                    .value=${this._newSound}
-                    .label=${"Sound"}
-                    @value-changed=${(e) => this._newSound = e.detail.value}
-                 ></ha-selector>
-                </div>
-             ` : html`
-                 <input
-                    id="newSound"
-                    type="text"
-                    placeholder="Pre-announcement sound (Optional URL or media_content_id)"
-                    class="msg-input"
-                    .value=${this._newSound}
-                    @input=${(e) => this._newSound = e.target.value}
-                 />
-             `}
+             <label class="checkbox-container">
+               <input
+                 type="checkbox"
+                 .checked=${this._newSoundEnabled}
+                 @change=${(e) => this._newSoundEnabled = e.target.checked}
+               >
+               Enable sound
+             </label>
           </div>
+
+          ${this._newSoundEnabled ? html`
+            <div class="row">
+               ${customElements.get("ha-selector") ? html`
+                  <div class="input-group">
+                   <ha-selector
+                      .hass=${this.hass}
+                      .selector=${{ media: {} }}
+                      .value=${this._newSound || undefined}
+                      .label=${"Sound"}
+                      @value-changed=${(e) => this._newSound = e.detail.value}
+                   ></ha-selector>
+                  </div>
+               ` : html`
+                   <input
+                      id="newSound"
+                      type="text"
+                      placeholder="Sound URL or media_content_id"
+                      class="msg-input"
+                      .value=${this._newSound}
+                      @input=${(e) => this._newSound = e.target.value}
+                   />
+               `}
+            </div>
+          ` : ""}
 
           <div class="section-label">TTS Settings:</div>
           <bell-tts-selector
@@ -343,7 +358,7 @@ export class FamilyBellPanel extends LitElement {
       tts_provider: this._newTTS.provider,
       tts_voice: this._newTTS.voice,
       tts_language: this._newTTS.language,
-      sound: this._newSound,
+      sound: this._newSoundEnabled ? this._newSound : null,
     };
 
     this.hass.callWS({ type: "family_bell/update_bell", bell: newBell }).then(() => {
@@ -372,7 +387,7 @@ export class FamilyBellPanel extends LitElement {
         tts_provider: this._newTTS.provider,
         tts_voice: this._newTTS.voice,
         tts_language: this._newTTS.language,
-        sound: this._newSound,
+        sound: this._newSoundEnabled ? this._newSound : null,
       };
 
       this.hass.callWS({ type: "family_bell/test_bell", bell: testBell });
@@ -388,6 +403,7 @@ export class FamilyBellPanel extends LitElement {
           language: bell.tts_language || this._globalTTS.language,
       };
       this._newSound = bell.sound || "";
+      this._newSoundEnabled = !!bell.sound;
 
       // Need to wait for update to populate input fields
       this.requestUpdate();
@@ -412,6 +428,7 @@ export class FamilyBellPanel extends LitElement {
       this._newSpeakers = [];
       this._newTTS = { ...this._globalTTS };
       this._newSound = "";
+      this._newSoundEnabled = false;
       this._speakerFilter = "";
       this.requestUpdate();
   }
