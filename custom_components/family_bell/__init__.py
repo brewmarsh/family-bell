@@ -379,7 +379,9 @@ async def schedule_bells(hass, entry):
                         media_type = "music"
                         if isinstance(sound, dict):
                             media_id = sound.get("media_content_id")
-                            media_type = sound.get("media_content_type", "music")
+                            media_type = sound.get(
+                                "media_content_type", "music"
+                            )
                         elif isinstance(sound, str):
                             media_id = sound
 
@@ -398,7 +400,10 @@ async def schedule_bells(hass, entry):
                                 if inspect.isawaitable(res):
                                     await res
                             except Exception as e:
-                                _LOGGER.warning("Failed to play pre-announcement sound: %s", e)
+                                _LOGGER.warning(
+                                    "Failed to play pre-announcement sound: %s",
+                                    e,
+                                )
 
                     service_data = {
                         "entity_id": provider,

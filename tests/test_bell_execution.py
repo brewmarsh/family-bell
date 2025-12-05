@@ -1,14 +1,16 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
 from homeassistant.core import HomeAssistant
 from custom_components.family_bell import DOMAIN
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+
 
 @pytest.fixture(autouse=True)
 def mock_nabucasa():
     """Mock hass_nabucasa to avoid import errors in CI due to acme/josepy version mismatch."""
     with patch.dict("sys.modules", {"hass_nabucasa": MagicMock()}):
         yield
+
 
 @pytest.mark.asyncio
 async def test_ws_test_bell_with_sound(hass: HomeAssistant, hass_ws_client):
@@ -18,29 +20,45 @@ async def test_ws_test_bell_with_sound(hass: HomeAssistant, hass_ws_client):
         domain=DOMAIN,
         entry_id="test_entry",
         data={"tts_provider": "tts.google"},
-        options={}
+        options={},
     )
     entry.add_to_hass(hass)
 
     # Register mock services
     play_media_calls = []
+
     async def mock_play_media(call):
         play_media_calls.append(call)
 
     hass.services.async_register("media_player", "play_media", mock_play_media)
 
     speak_calls = []
+
     async def mock_speak(call):
         speak_calls.append(call)
 
     hass.services.async_register("tts", "speak", mock_speak)
 
+    # Mock async_add_executor_job to prevent thread creation
+    original_add_executor_job = hass.async_add_executor_job
+
+    async def mock_add_executor_job(target, *args):
+        if target.__name__ == "read_version":
+            return "1.0.0"
+        return await original_add_executor_job(target, *args)
+
+    hass.async_add_executor_job = AsyncMock(side_effect=mock_add_executor_job)
+
     # Mock setup dependencies
-    with patch("custom_components.family_bell.async_register_built_in_panel"), \
-         patch("custom_components.family_bell.add_extra_js_url"), \
-         patch("custom_components.family_bell.async_remove_panel"), \
-         patch("os.path.isdir", return_value=True), \
-         patch("os.path.isfile", return_value=True):
+    with patch(
+        "custom_components.family_bell.async_register_built_in_panel"
+    ), patch("custom_components.family_bell.add_extra_js_url"), patch(
+        "custom_components.family_bell.async_remove_panel"
+    ), patch(
+        "os.path.isdir", return_value=True
+    ), patch(
+        "os.path.isfile", return_value=True
+    ):
 
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -59,8 +77,8 @@ async def test_ws_test_bell_with_sound(hass: HomeAssistant, hass_ws_client):
                 "message": "Hello",
                 "enabled": True,
                 "speakers": ["media_player.kitchen"],
-                "sound": "http://example.com/sound.mp3"
-            }
+                "sound": "http://example.com/sound.mp3",
+            },
         }
 
         await client.send_json(msg)
@@ -70,8 +88,13 @@ async def test_ws_test_bell_with_sound(hass: HomeAssistant, hass_ws_client):
 
         # Verify
         assert len(play_media_calls) == 1
-        assert play_media_calls[0].data["media_content_id"] == "http://example.com/sound.mp3"
-        assert play_media_calls[0].data["entity_id"] == ["media_player.kitchen"]
+        assert (
+            play_media_calls[0].data["media_content_id"]
+            == "http://example.com/sound.mp3"
+        )
+        assert play_media_calls[0].data["entity_id"] == [
+            "media_player.kitchen"
+        ]
 
         assert len(speak_calls) == 1
         assert speak_calls[0].data["message"] == "Hello"
@@ -79,37 +102,54 @@ async def test_ws_test_bell_with_sound(hass: HomeAssistant, hass_ws_client):
         await hass.async_block_till_done()
         await client.close()
 
+
 @pytest.mark.asyncio
 async def test_ws_test_bell_no_sound(hass: HomeAssistant, hass_ws_client):
     """Test ws_test_bell without sound."""
+
+    # Mock async_add_executor_job to prevent thread creation
+    original_add_executor_job = hass.async_add_executor_job
+
+    async def mock_add_executor_job(target, *args):
+        if target.__name__ == "read_version":
+            return "1.0.0"
+        return await original_add_executor_job(target, *args)
+
+    hass.async_add_executor_job = AsyncMock(side_effect=mock_add_executor_job)
 
     entry = MockConfigEntry(
         domain=DOMAIN,
         entry_id="test_entry",
         data={"tts_provider": "tts.google"},
-        options={}
+        options={},
     )
     entry.add_to_hass(hass)
 
     # Register mock services
     play_media_calls = []
+
     async def mock_play_media(call):
         play_media_calls.append(call)
 
     hass.services.async_register("media_player", "play_media", mock_play_media)
 
     speak_calls = []
+
     async def mock_speak(call):
         speak_calls.append(call)
 
     hass.services.async_register("tts", "speak", mock_speak)
 
     # Mock setup dependencies
-    with patch("custom_components.family_bell.async_register_built_in_panel"), \
-         patch("custom_components.family_bell.add_extra_js_url"), \
-         patch("custom_components.family_bell.async_remove_panel"), \
-         patch("os.path.isdir", return_value=True), \
-         patch("os.path.isfile", return_value=True):
+    with patch(
+        "custom_components.family_bell.async_register_built_in_panel"
+    ), patch("custom_components.family_bell.add_extra_js_url"), patch(
+        "custom_components.family_bell.async_remove_panel"
+    ), patch(
+        "os.path.isdir", return_value=True
+    ), patch(
+        "os.path.isfile", return_value=True
+    ):
 
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -129,7 +169,7 @@ async def test_ws_test_bell_no_sound(hass: HomeAssistant, hass_ws_client):
                 "enabled": True,
                 "speakers": ["media_player.kitchen"],
                 # No sound field
-            }
+            },
         }
 
         await client.send_json(msg)
