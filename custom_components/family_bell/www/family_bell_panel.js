@@ -20,7 +20,7 @@ export class FamilyBellPanel extends LitElement {
       _newDays: { type: Array },
       _newSpeakers: { type: Array },
       _newTTS: { type: Object },
-      _newSound: { type: String },
+      _newSound: { type: Object }, // Can be String or Object
       _globalTTS: { type: Object },
       _version: { type: String },
       _editingBellId: { type: String },
@@ -140,14 +140,27 @@ export class FamilyBellPanel extends LitElement {
           </div>
 
           <div class="row">
-             <input
-                id="newSound"
-                type="text"
-                placeholder="Pre-announcement sound (Optional URL or media_content_id)"
-                class="msg-input"
-                .value=${this._newSound}
-                @input=${(e) => this._newSound = e.target.value}
-             />
+             ${customElements.get("ha-selector") ? html`
+                <div class="input-group">
+                 <label>Pre-announcement sound</label>
+                 <ha-selector
+                    .hass=${this.hass}
+                    .selector=${{ media: {} }}
+                    .value=${this._newSound}
+                    .label=${"Sound"}
+                    @value-changed=${(e) => this._newSound = e.detail.value}
+                 ></ha-selector>
+                </div>
+             ` : html`
+                 <input
+                    id="newSound"
+                    type="text"
+                    placeholder="Pre-announcement sound (Optional URL or media_content_id)"
+                    class="msg-input"
+                    .value=${this._newSound}
+                    @input=${(e) => this._newSound = e.target.value}
+                 />
+             `}
           </div>
 
           <div class="section-label">TTS Settings:</div>
