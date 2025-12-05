@@ -39,7 +39,9 @@ export class BellTTSSelector extends LitElement {
         }
     }
     if (changedProperties.has("provider")) {
-      console.log("Provider changed to", this.provider);
+      // If provider changed, fetch languages and voices
+      // Check if it actually changed to avoid loop if strict equality
+      // provider property update triggers this.
       this._updateLanguages(this.provider);
       this._fetchVoices(this.provider);
     }
@@ -55,24 +57,14 @@ export class BellTTSSelector extends LitElement {
         languages: this.hass.states[eid].attributes.supported_languages || [],
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
-
-    // Force requestUpdate because _providers is internal but we want to re-render
-    // Actually it's a property so setting it should trigger update if changed.
-    // BUT we are creating a new array, so it is changed.
-    // However, if we are inside willUpdate (called from update), changing a property might cause another update?
-    // _fetchProviders is called in willUpdate -> sets _providers -> triggers update?
-    // Be careful of infinite loops.
-    // But _fetchProviders only runs if _providers.length === 0.
   }
 
   _updateLanguages(providerId) {
     const provider = this._providers.find((p) => p.id === providerId);
     this._languages = provider ? provider.languages : [];
-    console.log("Updated languages:", this._languages);
 
     // Reset language if current is not supported, or default to first
     if (this._languages.length > 0 && !this._languages.includes(this.language)) {
-      console.log("Current language", this.language, "not in supported. Auto-selecting", this._languages[0]);
       this.language = this._languages[0];
       this._dispatchChange();
     }
@@ -80,26 +72,41 @@ export class BellTTSSelector extends LitElement {
 
   async _fetchVoices(providerId) {
     this._voices = [];
-    if (!providerId || !this.hass || !this.hass.states) return;
+    if (!providerId || !this.hass) return;
 
-    // Check if attributes have options (common in some integrations)
-    const state = this.hass.states[providerId];
-    if (state && state.attributes.options && state.attributes.options.voice) {
-        // Some integrations might list voices in options? Unlikely.
+    let fetched = false;
+
+    // Try WebSocket command 'tts/voices'
+    try {
+        const result = await this.hass.callWS({
+            type: "tts/voices",
+            engine_id: providerId,
+            language: this.language || undefined,
+        });
+        if (result && result.voices) {
+            this._voices = result.voices.map(v => ({
+                id: v.voice_id,
+                name: v.name || v.voice_id
+            }));
+            fetched = true;
+        }
+    } catch (err) {
+        // Ignore WS error, likely not supported by HA version or integration
     }
 
-    // Try to check if there is a 'voices' attribute
-    if (state && state.attributes.voices) {
-        this._voices = state.attributes.voices;
-        return;
+    // Fallback to state attributes
+    if (!fetched && this.hass.states && this.hass.states[providerId]) {
+         const state = this.hass.states[providerId];
+         if (state.attributes.voices) {
+             this._voices = state.attributes.voices.map(v => ({
+                 id: v,
+                 name: v
+             }));
+         }
     }
 
-    // Try WebSocket command if available (speculative but requested)
-    // We try 'tts/voices' which might not exist, catch error.
-    // Some integrations use 'tts_get_voices' service? No.
-    // This is a guess at a command name, or maybe we just don't populate if not standard
-    // But the user asked for "installed in the system".
-    // We will leave it empty if we can't find them.
+    // Explicitly request update as _voices mutation might not trigger it if array ref is same (but we reassigned it)
+    this.requestUpdate();
   }
 
   _handleProviderChange(e) {
@@ -115,6 +122,7 @@ export class BellTTSSelector extends LitElement {
 
   _handleLanguageChange(e) {
     this.language = e.target.value;
+    this._fetchVoices(this.provider); // Re-fetch voices as they might depend on language
     this._dispatchChange();
   }
 
@@ -175,7 +183,6 @@ export class BellTTSSelector extends LitElement {
                 />
                  <datalist id="languages">
                      <option value="en">English</option>
-                     <!-- Add more common ones? -->
                  </datalist>
              </div>
           `}
@@ -191,7 +198,7 @@ export class BellTTSSelector extends LitElement {
           />
           <datalist id="voices">
             ${this._voices.map(
-              (v) => html`<option value="${v}">${v}</option>`
+              (v) => html`<option value="${v.id}">${v.name}</option>`
             )}
           </datalist>
         </div>

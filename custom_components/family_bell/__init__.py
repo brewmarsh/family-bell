@@ -54,7 +54,7 @@ BELL_SCHEMA = vol.Schema(
         vol.Optional("tts_provider"): vol.Any(str, None),
         vol.Optional("tts_voice"): vol.Any(str, None),
         vol.Optional("tts_language"): vol.Any(str, None),
-        vol.Optional("sound"): vol.Any(str, None),
+        vol.Optional("sound"): vol.Any(str, dict, None),
     }
 )
 
@@ -375,21 +375,30 @@ async def schedule_bells(hass, entry):
 
                     sound = bell_data.get("sound")
                     if sound:
-                        try:
-                            res = hass.services.async_call(
-                                "media_player",
-                                "play_media",
-                                {
-                                    "entity_id": bell_data["speakers"],
-                                    "media_content_id": sound,
-                                    "media_content_type": "music",
-                                    "announce": True,
-                                },
-                            )
-                            if inspect.isawaitable(res):
-                                await res
-                        except Exception as e:
-                            _LOGGER.warning("Failed to play pre-announcement sound: %s", e)
+                        media_id = None
+                        media_type = "music"
+                        if isinstance(sound, dict):
+                            media_id = sound.get("media_content_id")
+                            media_type = sound.get("media_content_type", "music")
+                        elif isinstance(sound, str):
+                            media_id = sound
+
+                        if media_id:
+                            try:
+                                res = hass.services.async_call(
+                                    "media_player",
+                                    "play_media",
+                                    {
+                                        "entity_id": bell_data["speakers"],
+                                        "media_content_id": media_id,
+                                        "media_content_type": media_type,
+                                        "announce": True,
+                                    },
+                                )
+                                if inspect.isawaitable(res):
+                                    await res
+                            except Exception as e:
+                                _LOGGER.warning("Failed to play pre-announcement sound: %s", e)
 
                     service_data = {
                         "entity_id": provider,
@@ -512,21 +521,30 @@ async def ws_test_bell(hass, connection, msg):
 
     sound = bell_data.get("sound")
     if sound:
-        try:
-            res = hass.services.async_call(
-                "media_player",
-                "play_media",
-                {
-                    "entity_id": bell_data["speakers"],
-                    "media_content_id": sound,
-                    "media_content_type": "music",
-                    "announce": True,
-                },
-            )
-            if inspect.isawaitable(res):
-                await res
-        except Exception as e:
-            _LOGGER.warning("Failed to play pre-announcement sound: %s", e)
+        media_id = None
+        media_type = "music"
+        if isinstance(sound, dict):
+            media_id = sound.get("media_content_id")
+            media_type = sound.get("media_content_type", "music")
+        elif isinstance(sound, str):
+            media_id = sound
+
+        if media_id:
+            try:
+                res = hass.services.async_call(
+                    "media_player",
+                    "play_media",
+                    {
+                        "entity_id": bell_data["speakers"],
+                        "media_content_id": media_id,
+                        "media_content_type": media_type,
+                        "announce": True,
+                    },
+                )
+                if inspect.isawaitable(res):
+                    await res
+            except Exception as e:
+                _LOGGER.warning("Failed to play pre-announcement sound: %s", e)
 
     service_data = {
         "entity_id": provider,
