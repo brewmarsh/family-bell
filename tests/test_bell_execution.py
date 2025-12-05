@@ -76,6 +76,9 @@ async def test_ws_test_bell_with_sound(hass: HomeAssistant, hass_ws_client):
         assert len(speak_calls) == 1
         assert speak_calls[0].data["message"] == "Hello"
 
+        await hass.async_block_till_done()
+        await client.close()
+
 @pytest.mark.asyncio
 async def test_ws_test_bell_no_sound(hass: HomeAssistant, hass_ws_client):
     """Test ws_test_bell without sound."""
@@ -137,3 +140,6 @@ async def test_ws_test_bell_no_sound(hass: HomeAssistant, hass_ws_client):
         # Verify
         assert len(play_media_calls) == 0
         assert len(speak_calls) == 1
+
+        await hass.async_block_till_done()
+        await client.close()
