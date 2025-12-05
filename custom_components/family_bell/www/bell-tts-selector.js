@@ -81,7 +81,6 @@ export class BellTTSSelector extends LitElement {
         const result = await this.hass.callWS({
             type: "tts/voices",
             engine_id: providerId,
-            language: this.language || undefined,
         });
         if (result && result.voices) {
             this._voices = result.voices.map(v => ({
