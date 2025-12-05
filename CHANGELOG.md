@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2024-12-05
+
+### Added
+- Official 1.0 Release.
+- Comprehensive README with screenshots.
+- Full feature set including Vacation Mode, Multi-Speaker support, and Per-Bell TTS settings.
+
 ## [1.1.2] - 2025-12-02
 
 ### Fixed

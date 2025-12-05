@@ -23,9 +23,10 @@ For full documentation, please visit [our documentation site](https://brewmarsh.
 ## Key Features ✨
 
 *   **📅 Custom Schedules:** Create recurring bells (e.g., "School Starts", "Lunch Time") on specific days of the week.
-*   **📢 Multi-Speaker Support:** targeted announcements to specific media players (Sonos, Google Cast, Alexa via Nabu Casa, etc.).
+*   **📢 Multi-Speaker Support:** Targeted announcements to specific media players (Sonos, Google Cast, Alexa via Nabu Casa, etc.). Includes a search filter for easy selection.
 *   **🌴 Vacation Mode:** Easily pause all bells during specific date ranges (Spring Break, Holidays) without deleting them.
-*   **🗣️ Flexible TTS:** Works with **any** Text-to-Speech engine configured in Home Assistant (Google Translate, Nabu Casa Cloud, Piper, MaryTTS).
+*   **🗣️ Flexible TTS:** Works with **any** Text-to-Speech engine configured in Home Assistant. Configure global defaults or **override settings per-bell** (Provider, Voice, Language).
+*   **🧪 Instant Testing:** Test any configuration immediately with a "Test" button before saving.
 *   **💻 Native UI Panel:** Includes a dedicated sidebar panel for easy management—no YAML editing required!
 
 ## Installation 🛠️
@@ -48,15 +49,16 @@ Configuration is done via the UI. For a complete guide, please see the [Configur
 This integration provides a custom panel to manage your bells. The panel is automatically added to your Home Assistant sidebar when you install the integration.
 
 The Web UI provides a comprehensive overview of your bells, including:
-*   A list of all your bells.
-*   The ability to add, edit, and delete bells.
-*   A vacation mode to temporarily disable all bells.
+*   A dashboard of all scheduled bells.
+*   **Add/Edit Bells:** Intuitive form to set time, message, days, speakers, and TTS overrides.
+*   **Vacation Mode:** A simple toggle and date range picker to suspend bells.
+*   **Testing:** Verify your message and volume on selected speakers instantly.
 
 ## Services & Controls 🎛️
 
-The following services are available:
+The following services are available for automation:
 
-*   `family_bell.add_bell`: Add a new bell.
+*   `family_bell.add_bell`: Add a new bell programmatically.
 *   `family_bell.delete_bell`: Delete a bell.
 *   `family_bell.set_vacation_mode`: Enable or disable vacation mode.
 

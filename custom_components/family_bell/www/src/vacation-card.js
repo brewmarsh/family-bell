@@ -3,6 +3,7 @@ import {
   html,
   css,
 } from "https://unpkg.com/lit-element@2.4.0/lit-element.js?module";
+import { localize } from "./localize.js";
 
 class VacationCard extends LitElement {
   static get properties() {
@@ -47,7 +48,7 @@ class VacationCard extends LitElement {
     return html`
       <div class="card">
         <div class="card-header">
-          <h2>🌴 Vacation Mode</h2>
+          <h2>🌴 ${localize("vacation_mode", this.hass)}</h2>
           <div class="toggle-container">
             <label class="switch">
               <input
@@ -61,7 +62,7 @@ class VacationCard extends LitElement {
         </div>
         <div class="row inputs">
           <div class="input-group">
-            <label>Start Date</label>
+            <label>${localize("start_date", this.hass)}</label>
             <input
               type="date"
               .value=${this.vacation.start || ""}
@@ -70,7 +71,7 @@ class VacationCard extends LitElement {
             />
           </div>
           <div class="input-group">
-            <label>End Date</label>
+            <label>${localize("end_date", this.hass)}</label>
             <input
               type="date"
               .value=${this.vacation.end || ""}

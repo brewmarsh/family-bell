@@ -3,6 +3,7 @@ import datetime
 import voluptuous as vol
 import inspect
 import json
+import os
 
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
@@ -21,10 +22,12 @@ except ImportError:
 
 try:
     from homeassistant.components.frontend import (
+        add_extra_js_url,
         async_register_built_in_panel,
         async_remove_panel,
     )
 except ImportError:
+    add_extra_js_url = None
     async_register_built_in_panel = None
     async_remove_panel = None
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -100,53 +103,46 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     }
 
     # 2. Register Static Paths for Frontend
-    path = hass.config.path(
-        "custom_components/family_bell/frontend/family_bell_panel.js"
-    )
-    path_selector = hass.config.path(
-        "custom_components/family_bell/frontend/bell-tts-selector.js"
-    )
-    path_lit = hass.config.path(
-        "custom_components/family_bell/frontend/lit-element.js"
-    )
+    # Use 'www' convention
+    frontend_dir = hass.config.path("custom_components/family_bell/www")
 
-    _LOGGER.debug("Registering static path: %s -> %s", PANEL_URL, path)
-
-    paths_to_register = []
-
-    if StaticPathConfig:
-        paths_to_register.append(StaticPathConfig(PANEL_URL, path, False))
-        paths_to_register.append(
-            StaticPathConfig(
-                "/family_bell/bell-tts-selector.js", path_selector, False
-            )
-        )
-        paths_to_register.append(
-            StaticPathConfig("/family_bell/lit-element.js", path_lit, False)
-        )
+    # Check if directory exists
+    if not os.path.isdir(frontend_dir):
+        _LOGGER.error("Frontend directory not found at path: %s", frontend_dir)
+        return False
     else:
-        paths_to_register.append(
-            {"url_path": PANEL_URL, "path": path, "cache_headers": False}
-        )
-        paths_to_register.append(
-            {
-                "url_path": "/family_bell/bell-tts-selector.js",
-                "path": path_selector,
-                "cache_headers": False,
-            }
-        )
-        paths_to_register.append(
-            {
-                "url_path": "/family_bell/lit-element.js",
-                "path": path_lit,
-                "cache_headers": False,
-            }
-        )
+        _LOGGER.debug("Frontend directory confirmed at: %s", frontend_dir)
 
-    try:
-        await hass.http.async_register_static_paths(paths_to_register)
-    except RuntimeError:
-        _LOGGER.debug("Static paths already registered")
+    # Verify the panel file exists
+    panel_file = os.path.join(frontend_dir, "family_bell_panel.js")
+    if not os.path.isfile(panel_file):
+        _LOGGER.error("Panel file not found at path: %s", panel_file)
+        return False
+
+    _LOGGER.debug("Registering static path: /family_bell -> %s", frontend_dir)
+
+    if hasattr(hass.http, "async_register_static_paths") and StaticPathConfig:
+        paths_to_register = [
+            StaticPathConfig("/family_bell", frontend_dir, False),
+        ]
+        try:
+            await hass.http.async_register_static_paths(paths_to_register)
+            _LOGGER.debug("Registered static paths (async)")
+        except RuntimeError:
+            _LOGGER.debug("Static paths already registered")
+        except Exception as e:
+            _LOGGER.error("Error registering static paths: %s", e)
+    else:
+        # Fallback for legacy HA or if StaticPathConfig is missing
+        _LOGGER.debug("Using legacy static path registration")
+        try:
+            hass.http.register_static_path("/family_bell", frontend_dir, False)
+        except AttributeError:
+            _LOGGER.error(
+                "Could not register static paths: neither async nor sync method available"
+            )
+        except Exception as e:
+            _LOGGER.error("Error registering static paths (legacy): %s", e)
 
     # 3. Register Sidebar Panel
     _LOGGER.debug("Registering sidebar panel")
@@ -162,22 +158,54 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     res = async_remove_panel(hass, panel_id)
                     if inspect.isawaitable(res):
                         await res
+                    _LOGGER.debug("Removed existing panel: %s", panel_id)
                 except Exception as ex:
                     _LOGGER.debug("Error removing panel %s: %s", panel_id, ex)
 
     try:
         if async_register_built_in_panel:
+            # Construct versioned URL for cache busting
+            panel_url = f"{PANEL_URL}?v={version}"
+
+            # NOTE: We do NOT need to call add_extra_js_url here because the 'custom'
+            # panel component handles loading the module_url automatically.
+            # Using component_name="custom" is the key.
+
+            _LOGGER.debug(
+                "Calling async_register_built_in_panel with: component_name='custom', "
+                "sidebar_title='Family Bell', sidebar_icon='mdi:bell', frontend_url_path='family-bell'"
+            )
+
             async_register_built_in_panel(
                 hass,
-                component_name="family-bell",
+                component_name="custom",
                 sidebar_title="Family Bell",
                 sidebar_icon="mdi:bell",
                 frontend_url_path="family-bell",
-                config={"module_url": PANEL_URL, "embed_iframe": False},
+                config={
+                    "_panel_custom": {
+                        "name": "family-bell",
+                        "module_url": panel_url,
+                        "embed_iframe": False,
+                        "trust_external_script": True,
+                    }
+                },
                 require_admin=True,
                 update=True,
             )
-            _LOGGER.debug("Registered built-in panel")
+            _LOGGER.debug("Registered built-in panel (custom)")
+
+            # Verify registration
+            panels = hass.data.get("frontend_panels", {})
+            if "family-bell" in panels:
+                _LOGGER.debug(
+                    "Panel 'family-bell' confirmed in frontend_panels. Config: %s",
+                    panels["family-bell"],
+                )
+            else:
+                _LOGGER.error(
+                    "Panel 'family-bell' NOT found in frontend_panels after registration!"
+                )
         else:
             # Fallback for older HA
             if hasattr(hass.components.frontend, "async_remove_panel"):
@@ -214,6 +242,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         if async_register_command:
             async_register_command(hass, ws_get_data)
             async_register_command(hass, ws_update_bell)
+            async_register_command(hass, ws_test_bell)
             async_register_command(hass, ws_delete_bell)
             async_register_command(hass, ws_update_vacation)
         else:
@@ -222,6 +251,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             )
             hass.components.websocket_api.async_register_command(
                 hass, ws_update_bell
+            )
+            hass.components.websocket_api.async_register_command(
+                hass, ws_test_bell
             )
             hass.components.websocket_api.async_register_command(
                 hass, ws_delete_bell
@@ -343,9 +375,10 @@ async def schedule_bells(hass, entry):
                     service_data = {
                         "entity_id": provider,
                         "message": bell_data["message"],
-                        "language": lang,
                         "media_player_entity_id": bell_data["speakers"],
                     }
+                    if lang:
+                        service_data["language"] = lang
                     if voice:
                         service_data["options"] = {"voice": voice}
 
@@ -412,6 +445,67 @@ async def ws_update_bell(hass, connection, msg):
 
     await save_data(hass)
     connection.send_result(msg["id"], {"success": True})
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "family_bell/test_bell",
+        vol.Required("bell"): BELL_SCHEMA,
+    }
+)
+@websocket_api.async_response
+async def ws_test_bell(hass, connection, msg):
+    """Test a bell by playing it immediately."""
+    bell_data = msg["bell"]
+    entry_id = hass.data[DOMAIN]["entry_id"]
+    entry = hass.config_entries.async_get_entry(entry_id)
+
+    # Retrieve global TTS Settings
+    tts_provider = entry.options.get(
+        "tts_provider", entry.data.get("tts_provider")
+    )
+    tts_voice = entry.options.get("tts_voice", None)
+    tts_lang = entry.options.get("tts_language", "en")
+
+    # Use bell specific TTS if set, else global
+    provider = bell_data.get("tts_provider") or tts_provider
+    voice = bell_data.get("tts_voice") or tts_voice
+    lang = bell_data.get("tts_language") or tts_lang
+
+    if not provider:
+        connection.send_result(
+            msg["id"],
+            {
+                "success": False,
+                "error": {
+                    "code": "no_provider",
+                    "message": "No TTS provider configured.",
+                },
+            },
+        )
+        return
+
+    service_data = {
+        "entity_id": provider,
+        "message": bell_data["message"],
+        "media_player_entity_id": bell_data["speakers"],
+    }
+    if lang:
+        service_data["language"] = lang
+    if voice:
+        service_data["options"] = {"voice": voice}
+
+    try:
+        await hass.services.async_call("tts", "speak", service_data)
+        connection.send_result(msg["id"], {"success": True})
+    except Exception as e:
+        connection.send_result(
+            msg["id"],
+            {
+                "success": False,
+                "error": {"code": "service_call_failed", "message": str(e)},
+            },
+        )
 
 
 @websocket_api.websocket_command(
