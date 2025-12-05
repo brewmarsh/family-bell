@@ -4,6 +4,12 @@ from homeassistant.core import HomeAssistant
 from custom_components.family_bell import DOMAIN
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+@pytest.fixture(autouse=True)
+def mock_nabucasa():
+    """Mock hass_nabucasa to avoid import errors in CI due to acme/josepy version mismatch."""
+    with patch.dict("sys.modules", {"hass_nabucasa": MagicMock()}):
+        yield
+
 @pytest.mark.asyncio
 async def test_ws_test_bell_with_sound(hass: HomeAssistant, hass_ws_client):
     """Test ws_test_bell plays sound and tts."""
