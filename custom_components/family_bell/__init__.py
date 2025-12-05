@@ -327,7 +327,7 @@ async def schedule_bells(hass, entry):
         "tts_provider", entry.data.get("tts_provider")
     )
     tts_voice = entry.options.get("tts_voice", None)
-    tts_lang = entry.options.get("tts_language", "en")
+    tts_lang = entry.options.get("tts_language")
 
     # Check Vacation Mode
     if data["vacation"]["enabled"]:
@@ -415,7 +415,7 @@ async def ws_get_data(hass, connection, msg):
                 "tts_provider", entry.data.get("tts_provider")
             ),
             "voice": entry.options.get("tts_voice"),
-            "language": entry.options.get("tts_language", "en"),
+            "language": entry.options.get("tts_language"),
         }
 
     # Inject version
@@ -465,7 +465,7 @@ async def ws_test_bell(hass, connection, msg):
         "tts_provider", entry.data.get("tts_provider")
     )
     tts_voice = entry.options.get("tts_voice", None)
-    tts_lang = entry.options.get("tts_language", "en")
+    tts_lang = entry.options.get("tts_language")
 
     # Use bell specific TTS if set, else global
     provider = bell_data.get("tts_provider") or tts_provider

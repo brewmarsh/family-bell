@@ -19,7 +19,7 @@ TTS_SCHEMA = vol.Schema(
             "tts_provider", default="tts.google_en_com"
         ): EntitySelector(EntitySelectorConfig(domain="tts")),
         vol.Optional("tts_voice", default=""): TextSelector(),
-        vol.Optional("tts_language", default="en"): TextSelector(),
+        vol.Optional("tts_language"): TextSelector(),
     }
 )
 
@@ -72,7 +72,7 @@ class FamilyBellOptionsFlowHandler(config_entries.OptionsFlow):
             self.config_entry.data.get("tts_provider", "tts.google_en_com"),
         )
         current_voice = self.config_entry.options.get("tts_voice", "")
-        current_lang = self.config_entry.options.get("tts_language", "en")
+        current_lang = self.config_entry.options.get("tts_language", "")
 
         options_schema = vol.Schema(
             {
