@@ -24,6 +24,7 @@ def get_commit_messages(from_sha, to_sha):
         # Fallback to checking just the HEAD commit if range fails
         return []
 
+
 def determine_bump(messages):
     bump = None
     print(f"Commit messages: {messages}")
