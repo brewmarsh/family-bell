@@ -378,7 +378,11 @@ async def schedule_bells(hass, entry):
                         "media_player_entity_id": bell_data["speakers"],
                     }
                     if lang:
-                        service_data["language"] = lang
+                        # Piper fails if language is set to 'en'
+                        if lang == "en":
+                            lang = None
+                        else:
+                            service_data["language"] = lang
                     if voice:
                         service_data["options"] = {"voice": voice}
 
@@ -491,7 +495,11 @@ async def ws_test_bell(hass, connection, msg):
         "media_player_entity_id": bell_data["speakers"],
     }
     if lang:
-        service_data["language"] = lang
+        # Piper fails if language is set to 'en'
+        if lang == "en":
+            lang = None
+        else:
+            service_data["language"] = lang
     if voice:
         service_data["options"] = {"voice": voice}
 
