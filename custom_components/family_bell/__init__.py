@@ -54,6 +54,7 @@ BELL_SCHEMA = vol.Schema(
         vol.Optional("tts_provider"): vol.Any(str, None),
         vol.Optional("tts_voice"): vol.Any(str, None),
         vol.Optional("tts_language"): vol.Any(str, None),
+        vol.Optional("sound"): vol.Any(str, None),
     }
 )
 
@@ -372,6 +373,24 @@ async def schedule_bells(hass, entry):
                     voice = bell_data.get("tts_voice") or tts_voice
                     lang = bell_data.get("tts_language") or tts_lang
 
+                    sound = bell_data.get("sound")
+                    if sound:
+                        try:
+                            res = hass.services.async_call(
+                                "media_player",
+                                "play_media",
+                                {
+                                    "entity_id": bell_data["speakers"],
+                                    "media_content_id": sound,
+                                    "media_content_type": "music",
+                                    "announce": True,
+                                },
+                            )
+                            if inspect.isawaitable(res):
+                                await res
+                        except Exception as e:
+                            _LOGGER.warning("Failed to play pre-announcement sound: %s", e)
+
                     service_data = {
                         "entity_id": provider,
                         "message": bell_data["message"],
@@ -386,9 +405,11 @@ async def schedule_bells(hass, entry):
                     if voice:
                         service_data["options"] = {"voice": voice}
 
-                    await hass.services.async_call(
+                    res = hass.services.async_call(
                         "tts", "speak", service_data
                     )
+                    if inspect.isawaitable(res):
+                        await res
 
                 await schedule_bells(hass, entry)
 
@@ -489,6 +510,24 @@ async def ws_test_bell(hass, connection, msg):
         )
         return
 
+    sound = bell_data.get("sound")
+    if sound:
+        try:
+            res = hass.services.async_call(
+                "media_player",
+                "play_media",
+                {
+                    "entity_id": bell_data["speakers"],
+                    "media_content_id": sound,
+                    "media_content_type": "music",
+                    "announce": True,
+                },
+            )
+            if inspect.isawaitable(res):
+                await res
+        except Exception as e:
+            _LOGGER.warning("Failed to play pre-announcement sound: %s", e)
+
     service_data = {
         "entity_id": provider,
         "message": bell_data["message"],
@@ -504,7 +543,9 @@ async def ws_test_bell(hass, connection, msg):
         service_data["options"] = {"voice": voice}
 
     try:
-        await hass.services.async_call("tts", "speak", service_data)
+        res = hass.services.async_call("tts", "speak", service_data)
+        if inspect.isawaitable(res):
+            await res
         connection.send_result(msg["id"], {"success": True})
     except Exception as e:
         connection.send_result(

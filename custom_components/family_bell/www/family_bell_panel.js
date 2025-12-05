@@ -20,6 +20,7 @@ export class FamilyBellPanel extends LitElement {
       _newDays: { type: Array },
       _newSpeakers: { type: Array },
       _newTTS: { type: Object },
+      _newSound: { type: String },
       _globalTTS: { type: Object },
       _version: { type: String },
       _editingBellId: { type: String },
@@ -34,6 +35,7 @@ export class FamilyBellPanel extends LitElement {
     this._newDays = [];
     this._newSpeakers = [];
     this._newTTS = { provider: "", voice: "", language: "" };
+    this._newSound = "";
     this._globalTTS = {};
     this._version = "unknown";
     this._editingBellId = null;
@@ -135,6 +137,17 @@ export class FamilyBellPanel extends LitElement {
           <div class="row">
             <input id="newTime" type="time" class="time-input" />
             <input id="newMsg" type="text" placeholder="What should I say?" class="msg-input" />
+          </div>
+
+          <div class="row">
+             <input
+                id="newSound"
+                type="text"
+                placeholder="Pre-announcement sound (Optional URL or media_content_id)"
+                class="msg-input"
+                .value=${this._newSound}
+                @input=${(e) => this._newSound = e.target.value}
+             />
           </div>
 
           <div class="section-label">TTS Settings:</div>
@@ -317,6 +330,7 @@ export class FamilyBellPanel extends LitElement {
       tts_provider: this._newTTS.provider,
       tts_voice: this._newTTS.voice,
       tts_language: this._newTTS.language,
+      sound: this._newSound,
     };
 
     this.hass.callWS({ type: "family_bell/update_bell", bell: newBell }).then(() => {
@@ -345,6 +359,7 @@ export class FamilyBellPanel extends LitElement {
         tts_provider: this._newTTS.provider,
         tts_voice: this._newTTS.voice,
         tts_language: this._newTTS.language,
+        sound: this._newSound,
       };
 
       this.hass.callWS({ type: "family_bell/test_bell", bell: testBell });
@@ -359,6 +374,7 @@ export class FamilyBellPanel extends LitElement {
           voice: bell.tts_voice || this._globalTTS.voice,
           language: bell.tts_language || this._globalTTS.language,
       };
+      this._newSound = bell.sound || "";
 
       // Need to wait for update to populate input fields
       this.requestUpdate();
@@ -382,6 +398,7 @@ export class FamilyBellPanel extends LitElement {
       this._newDays = [];
       this._newSpeakers = [];
       this._newTTS = { ...this._globalTTS };
+      this._newSound = "";
       this._speakerFilter = "";
       this.requestUpdate();
   }
