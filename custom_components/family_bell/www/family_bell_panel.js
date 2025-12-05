@@ -121,7 +121,7 @@ export class FamilyBellPanel extends LitElement {
     return html`
       <div class="container">
         <div class="header">
-          <h1>🔔 Family Bell <span class="version">v${this._version}</span></h1>
+          <h1>🔔 Family Bell</h1>
         </div>
 
         <h3>Scheduled Bells</h3>
@@ -207,7 +207,7 @@ export class FamilyBellPanel extends LitElement {
           </div>
           <div class="row inputs">
             <div class="input-group">
-              <label>Start Date</label>
+              <label>First Day</label>
               <input
                 type="date"
                 .value=${this.vacation.start || ""}
@@ -216,7 +216,7 @@ export class FamilyBellPanel extends LitElement {
               />
             </div>
             <div class="input-group">
-              <label>End Date</label>
+              <label>Last Day</label>
               <input
                 type="date"
                 .value=${this.vacation.end || ""}
@@ -225,6 +225,9 @@ export class FamilyBellPanel extends LitElement {
               />
             </div>
           </div>
+        </div>
+        <div class="footer">
+          Family Bell v${this._version}
         </div>
       </div>
     `;
@@ -405,7 +408,7 @@ export class FamilyBellPanel extends LitElement {
       }
       .container { max-width: 600px; margin: 0 auto; padding-bottom: 50px;}
       h1, h2, h3 { margin-top: 0; font-weight: normal; }
-      .version { font-size: 0.5em; color: var(--secondary-text-color); vertical-align: middle; }
+      .footer { text-align: center; margin-top: 20px; color: var(--secondary-text-color); font-size: 0.8em; }
       
       .card {
         background: var(--card-background-color);
@@ -431,6 +434,7 @@ export class FamilyBellPanel extends LitElement {
         background: var(--secondary-background-color);
         color: var(--primary-text-color);
         font-size: 16px;
+        box-sizing: border-box;
       }
       .time-input { flex: 0 0 100px; }
       .msg-input { flex: 1; }
