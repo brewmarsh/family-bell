@@ -74,35 +74,61 @@ export class BellTTSSelector extends LitElement {
     if (!providerId || !this.hass) return;
 
     let fetched = false;
+    let rawVoices = [];
 
     // Try WebSocket command 'tts/voices'
-    try {
+    // Some providers (like Piper) may require 'language' to be set,
+    // while others might return all voices if it is omitted.
+    // We try with language first (if set), then without.
+    if (this.language) {
+      try {
         const result = await this.hass.callWS({
-            type: "tts/voices",
-            engine_id: providerId,
+          type: "tts/voices",
+          engine_id: providerId,
+          language: this.language,
+        });
+        if (result && result.voices && result.voices.length > 0) {
+          rawVoices = result.voices;
+          fetched = true;
+        }
+      } catch (err) {
+        console.warn("bell-tts-selector: tts/voices failed with language", err);
+      }
+    }
+
+    if (!fetched) {
+      try {
+        const result = await this.hass.callWS({
+          type: "tts/voices",
+          engine_id: providerId,
         });
         if (result && result.voices) {
-            this._voices = result.voices.map(v => ({
-                id: v.voice_id,
-                name: v.name || v.voice_id,
-                language: v.language,
-            }));
-            fetched = true;
+          rawVoices = result.voices;
+          fetched = true;
         }
-    } catch (err) {
-        // Ignore WS error, likely not supported by HA version or integration
+      } catch (err) {
+        console.warn("bell-tts-selector: tts/voices failed without language", err);
+      }
+    }
+
+    if (fetched) {
+      this._voices = rawVoices.map((v) => ({
+        id: v.voice_id,
+        name: v.name || v.voice_id,
+        language: v.language,
+      }));
     }
 
     // Fallback to state attributes
     if (!fetched && this.hass.states && this.hass.states[providerId]) {
-         const state = this.hass.states[providerId];
-         if (state.attributes.voices) {
-             this._voices = state.attributes.voices.map(v => ({
-                 id: v,
-                 name: v
-                 // language is undefined for fallback string list
-             }));
-         }
+      const state = this.hass.states[providerId];
+      if (state.attributes.voices) {
+        this._voices = state.attributes.voices.map((v) => ({
+          id: v,
+          name: v,
+          // language is undefined for fallback string list
+        }));
+      }
     }
 
     // Explicitly request update as _voices mutation might not trigger it if array ref is same (but we reassigned it)
