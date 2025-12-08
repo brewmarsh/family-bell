@@ -147,7 +147,7 @@ export class FamilyBellPanel extends LitElement {
                <input
                  type="checkbox"
                  .checked=${this._newSoundEnabled}
-                 @change=${(e) => this._newSoundEnabled = e.target.checked}
+                 @change=${(e) => this.toggleNewSoundEnabled(e.target.checked)}
                >
                Enable sound
              </label>
@@ -393,6 +393,18 @@ export class FamilyBellPanel extends LitElement {
       this.hass.callWS({ type: "family_bell/test_bell", bell: testBell });
   }
 
+  toggleNewSoundEnabled(enabled) {
+    this._newSoundEnabled = enabled;
+    if (enabled && !this._newSound && this._newSpeakers.length > 0) {
+        // Pre-fill entity_id to enable the media browser
+        this._newSound = {
+            entity_id: this._newSpeakers[0],
+            media_content_id: "",
+            media_content_type: "",
+        };
+    }
+  }
+
   editBell(bell) {
       this._editingBellId = bell.id;
       this._newDays = bell.days;
@@ -402,7 +414,20 @@ export class FamilyBellPanel extends LitElement {
           voice: bell.tts_voice || this._globalTTS.voice,
           language: bell.tts_language || this._globalTTS.language,
       };
-      this._newSound = bell.sound || "";
+
+      // Handle legacy string sounds
+      let sound = bell.sound;
+      if (typeof sound === 'string' && sound.length > 0) {
+           sound = {
+               media_content_id: sound,
+               media_content_type: 'music',
+               metadata: { title: sound }
+           };
+           if (this._newSpeakers.length > 0) {
+               sound.entity_id = this._newSpeakers[0];
+           }
+      }
+      this._newSound = sound || "";
       this._newSoundEnabled = !!bell.sound;
 
       // Need to wait for update to populate input fields
