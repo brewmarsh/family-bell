@@ -210,8 +210,18 @@ export class FamilyBellPanel extends LitElement {
             @input=${(e) => this._speakerFilter = e.target.value}
           />
           <div class="speaker-list">
-            ${this.getMediaPlayers().map(
-              (player) => html`
+            ${this.getMediaPlayers()
+              .filter((player) => {
+                const soundEntityId =
+                  this._newSoundEnabled &&
+                  this._newSound &&
+                  typeof this._newSound === "object"
+                    ? this._newSound.entity_id
+                    : null;
+                return player.id !== soundEntityId;
+              })
+              .map(
+                (player) => html`
                 <label class="checkbox-container">
                   <input 
                     type="checkbox" 
@@ -340,12 +350,32 @@ export class FamilyBellPanel extends LitElement {
     const time = this.shadowRoot.getElementById("newTime").value;
     const msg = this.shadowRoot.getElementById("newMsg").value;
 
-    if (!time || !msg || this._newDays.length === 0 || this._newSpeakers.length === 0) {
-      alert("Please fill in time, message, select at least one day and one speaker.");
+    const soundEntityId =
+      this._newSoundEnabled &&
+      this._newSound &&
+      typeof this._newSound === "object"
+        ? this._newSound.entity_id
+        : null;
+    let finalSpeakers = [...this._newSpeakers];
+    if (soundEntityId && !finalSpeakers.includes(soundEntityId)) {
+      finalSpeakers.push(soundEntityId);
+    }
+
+    if (
+      !time ||
+      !msg ||
+      this._newDays.length === 0 ||
+      finalSpeakers.length === 0
+    ) {
+      alert(
+        "Please fill in time, message, select at least one day and one speaker."
+      );
       return;
     }
 
-    const bellId = this._editingBellId ? this._editingBellId : Date.now().toString();
+    const bellId = this._editingBellId
+      ? this._editingBellId
+      : Date.now().toString();
 
     const newBell = {
       id: bellId,
@@ -353,7 +383,7 @@ export class FamilyBellPanel extends LitElement {
       time: time,
       message: msg,
       days: this._newDays,
-      speakers: this._newSpeakers,
+      speakers: finalSpeakers,
       enabled: true,
       tts_provider: this._newTTS.provider,
       tts_voice: this._newTTS.voice,
@@ -368,22 +398,33 @@ export class FamilyBellPanel extends LitElement {
   }
 
   testBell() {
-      const time = this.shadowRoot.getElementById("newTime").value;
-      const msg = this.shadowRoot.getElementById("newMsg").value;
+    const time = this.shadowRoot.getElementById("newTime").value;
+    const msg = this.shadowRoot.getElementById("newMsg").value;
 
-      if (!msg || this._newSpeakers.length === 0) {
-        alert("Please enter a message and select at least one speaker to test.");
-        return;
-      }
+    const soundEntityId =
+      this._newSoundEnabled &&
+      this._newSound &&
+      typeof this._newSound === "object"
+        ? this._newSound.entity_id
+        : null;
+    let finalSpeakers = [...this._newSpeakers];
+    if (soundEntityId && !finalSpeakers.includes(soundEntityId)) {
+      finalSpeakers.push(soundEntityId);
+    }
 
-      const testBell = {
-        id: "test",
-        name: "Test Bell",
-        time: time || "00:00",
-        message: msg,
-        days: [],
-        speakers: this._newSpeakers,
-        enabled: true,
+    if (!msg || finalSpeakers.length === 0) {
+      alert("Please enter a message and select at least one speaker to test.");
+      return;
+    }
+
+    const testBell = {
+      id: "test",
+      name: "Test Bell",
+      time: time || "00:00",
+      message: msg,
+      days: [],
+      speakers: finalSpeakers,
+      enabled: true,
         tts_provider: this._newTTS.provider,
         tts_voice: this._newTTS.voice,
         tts_language: this._newTTS.language,
