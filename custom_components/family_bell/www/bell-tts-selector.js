@@ -36,6 +36,13 @@ export class BellTTSSelector extends LitElement {
         // If hass changes, and we don't have providers, fetch them.
         if (this._providers.length === 0) {
             this._fetchProviders();
+
+            // If we have a provider selected, we should also try to fetch its details
+            // now that hass is available and providers are initialized.
+            if (this.provider) {
+                this._updateLanguages(this.provider);
+                this._fetchVoices(this.provider);
+            }
         }
     }
     if (changedProperties.has("provider")) {

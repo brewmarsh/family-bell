@@ -395,13 +395,26 @@ export class FamilyBellPanel extends LitElement {
 
   toggleNewSoundEnabled(enabled) {
     this._newSoundEnabled = enabled;
-    if (enabled && !this._newSound && this._newSpeakers.length > 0) {
+    if (enabled && !this._newSound) {
         // Pre-fill entity_id to enable the media browser
-        this._newSound = {
-            entity_id: this._newSpeakers[0],
-            media_content_id: "",
-            media_content_type: "",
-        };
+        let entityId = null;
+        if (this._newSpeakers.length > 0) {
+            entityId = this._newSpeakers[0];
+        } else {
+            // Fallback to first available player to ensure selector is enabled
+            const players = this.getMediaPlayers();
+            if (players.length > 0) {
+                entityId = players[0].id;
+            }
+        }
+
+        if (entityId) {
+            this._newSound = {
+                entity_id: entityId,
+                media_content_id: "",
+                media_content_type: "",
+            };
+        }
     }
   }
 
