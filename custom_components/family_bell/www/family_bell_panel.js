@@ -69,7 +69,7 @@ export class FamilyBellPanel extends LitElement {
     }
     this.hass.callWS({ type: "family_bell/get_data" }).then((data) => {
       console.log("Family Bell: Data received", data);
-      this.bells = data.bells;
+      this.bells = data.bells.sort((a, b) => a.time.localeCompare(b.time));
       this.vacation = data.vacation;
       this._dataFetched = true;
       if (data.version) {
