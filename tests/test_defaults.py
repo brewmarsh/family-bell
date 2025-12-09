@@ -8,7 +8,9 @@ from custom_components.family_bell.const import DOMAIN
 # Mock hass_nabucasa to avoid 'josepy' dependency issues in some test environments
 import sys
 from unittest.mock import MagicMock
+
 sys.modules["hass_nabucasa"] = MagicMock()
+
 
 @pytest.fixture
 def mock_storage():
@@ -21,13 +23,16 @@ def mock_storage():
                 "bells": [],
                 "vacation": {"start": None, "end": None, "enabled": False},
             }
+
         store_instance.async_load.side_effect = async_load
 
         async def async_save(data):
             return None
+
         store_instance.async_save.side_effect = async_save
 
         yield store_instance
+
 
 async def test_last_defaults_persistence(hass, hass_ws_client, mock_storage):
     """Test that TTS settings are saved to last_defaults."""
@@ -39,12 +44,19 @@ async def test_last_defaults_persistence(hass, hass_ws_client, mock_storage):
     entry.add_to_hass(hass)
 
     # Mock static path registration
-    with patch("custom_components.family_bell.os.path.isdir", return_value=True), \
-         patch("custom_components.family_bell.os.path.isfile", return_value=True), \
-         patch("custom_components.family_bell.async_register_built_in_panel"), \
-         patch("custom_components.family_bell.add_extra_js_url"), \
-         patch("homeassistant.helpers.event.async_track_point_in_utc_time"), \
-         patch.object(hass.config, "path", return_value="/mock/path"):
+    with patch(
+        "custom_components.family_bell.os.path.isdir", return_value=True
+    ), patch(
+        "custom_components.family_bell.os.path.isfile", return_value=True
+    ), patch(
+        "custom_components.family_bell.async_register_built_in_panel"
+    ), patch(
+        "custom_components.family_bell.add_extra_js_url"
+    ), patch(
+        "homeassistant.helpers.event.async_track_point_in_utc_time"
+    ), patch.object(
+        hass.config, "path", return_value="/mock/path"
+    ):
 
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
@@ -65,11 +77,9 @@ async def test_last_defaults_persistence(hass, hass_ws_client, mock_storage):
         "tts_language": "en",
     }
 
-    await client.send_json({
-        "id": 1,
-        "type": "family_bell/update_bell",
-        "bell": bell_data
-    })
+    await client.send_json(
+        {"id": 1, "type": "family_bell/update_bell", "bell": bell_data}
+    )
     response = await client.receive_json()
     assert response["success"]
 
@@ -81,10 +91,12 @@ async def test_last_defaults_persistence(hass, hass_ws_client, mock_storage):
     assert data["last_defaults"]["language"] == "en"
 
     # 2. Verify ws_get_data returns last_defaults
-    await client.send_json({
-        "id": 2,
-        "type": "family_bell/get_data",
-    })
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "family_bell/get_data",
+        }
+    )
     response = await client.receive_json()
     assert response["success"]
     assert "last_defaults" in response["result"]
@@ -104,11 +116,9 @@ async def test_last_defaults_persistence(hass, hass_ws_client, mock_storage):
         "tts_language": "es",
     }
 
-    await client.send_json({
-        "id": 3,
-        "type": "family_bell/update_bell",
-        "bell": bell_data_2
-    })
+    await client.send_json(
+        {"id": 3, "type": "family_bell/update_bell", "bell": bell_data_2}
+    )
     await client.receive_json()
 
     # Verify updated defaults
