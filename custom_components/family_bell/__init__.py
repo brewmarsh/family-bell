@@ -91,8 +91,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
     data = await store.async_load() or {
         "bells": [],
-        "vacation": {"start": None, "end": None, "enabled": False},
+        "vacation": {"enabled": False, "ranges": []},
     }
+
+    # Data Migration for Vacation (Single Range -> List of Ranges)
+    if "vacation" in data and "ranges" not in data["vacation"]:
+        _LOGGER.info("Migrating Family Bell vacation data to new format")
+        old_vacation = data["vacation"]
+        new_vacation = {"enabled": old_vacation.get("enabled", False), "ranges": []}
+        if old_vacation.get("start") and old_vacation.get("end"):
+            new_vacation["ranges"].append(
+                {"start": old_vacation["start"], "end": old_vacation["end"]}
+            )
+        data["vacation"] = new_vacation
+        await store.async_save(data)
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN] = {
@@ -331,24 +343,22 @@ async def schedule_bells(hass, entry):
     tts_lang = entry.options.get("tts_language")
 
     # Check Vacation Mode
-    if data["vacation"]["enabled"]:
+    if data.get("vacation", {}).get("enabled"):
         now_date = dt_util.now().date()
-        start = (
-            datetime.datetime.strptime(
-                data["vacation"]["start"], "%Y-%m-%d"
-            ).date()
-            if data["vacation"]["start"]
-            else None
-        )
-        end = (
-            datetime.datetime.strptime(
-                data["vacation"]["end"], "%Y-%m-%d"
-            ).date()
-            if data["vacation"]["end"]
-            else None
-        )
+        is_vacation = False
+        for r in data["vacation"].get("ranges", []):
+            try:
+                start = datetime.datetime.strptime(
+                    r["start"], "%Y-%m-%d"
+                ).date()
+                end = datetime.datetime.strptime(r["end"], "%Y-%m-%d").date()
+                if start <= now_date <= end:
+                    is_vacation = True
+                    break
+            except (ValueError, TypeError):
+                continue
 
-        if start and end and start <= now_date <= end:
+        if is_vacation:
             _LOGGER.debug("Vacation mode enabled and active")
             return
 
