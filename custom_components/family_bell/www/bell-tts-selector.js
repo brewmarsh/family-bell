@@ -229,7 +229,10 @@ export class BellTTSSelector extends LitElement {
                   ${this._voices
                     .filter(
                       (v) =>
-                        !this.language || !v.language || v.language === this.language
+                        !this.language ||
+                        !v.language ||
+                        v.language === this.language ||
+                        v.language.startsWith(this.language)
                     )
                     .map(
                       (v) =>
