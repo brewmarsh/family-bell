@@ -98,7 +98,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if "vacation" in data and "ranges" not in data["vacation"]:
         _LOGGER.info("Migrating Family Bell vacation data to new format")
         old_vacation = data["vacation"]
-        new_vacation = {"enabled": old_vacation.get("enabled", False), "ranges": []}
+        new_vacation = {
+            "enabled": old_vacation.get("enabled", False),
+            "ranges": [],
+        }
         if old_vacation.get("start") and old_vacation.get("end"):
             new_vacation["ranges"].append(
                 {"start": old_vacation["start"], "end": old_vacation["end"]}
