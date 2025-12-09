@@ -7,21 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.1] - 2025-12-09
+
+### Changed
+- Maintenance release to sync versioning and changelog.
+
+## [1.8.0] - 2025-12-05
+
+### Changed
+- Version bump to 1.8.0.
+
+## [1.1.2] - 2025-12-02
+
+### Fixed
+- Fix panel overwrite error on integration reload by using `update=True` in panel registration.
+
+## [1.1.1] - 2024-02-05
+
+### Fixed
+- Fix compatibility with Home Assistant 2024.12+ (OptionsFlow argument deprecation).
+
 ## [1.0.0] - 2024-12-05
 
 ### Added
 - Official 1.0 Release.
 - Comprehensive README with screenshots.
 - Full feature set including Vacation Mode, Multi-Speaker support, and Per-Bell TTS settings.
-
-## [1.1.2] - 2025-12-02
-
-### Fixed
-
-- Fix panel overwrite error on integration reload by using `update=True` in panel registration.
-
-## [1.1.1] - 2024-02-05
-
-### Fixed
-
-- Fix compatibility with Home Assistant 2024.12+ (OptionsFlow argument deprecation).
