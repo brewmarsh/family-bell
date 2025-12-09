@@ -3,6 +3,7 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=brewmarsh&repository=family-bell&category=integration)
 [![GitHub Release](https://img.shields.io/github/release/brewmarsh/family-bell.svg)](https://github.com/brewmarsh/family-bell/releases)
 [![License](https://img.shields.io/github/license/brewmarsh/family-bell.svg)](LICENSE)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=brewmarsh&repository=family-bell&category=integration)
 
 **Family Bell** is a custom integration that brings the functionality of Google's "Family Bell" directly into Home Assistant. It allows you to schedule recurring announcements on your smart speakers without relying on cloud schedules or specific hardware ecosystems.
 
@@ -23,11 +24,17 @@ For full documentation, please visit [our documentation site](https://brewmarsh.
 ## Key Features ✨
 
 *   **📅 Custom Schedules:** Create recurring bells (e.g., "School Starts", "Lunch Time") on specific days of the week.
-*   **📢 Multi-Speaker Support:** Targeted announcements to specific media players (Sonos, Google Cast, Alexa via Nabu Casa, etc.). Includes a search filter for easy selection.
-*   **🌴 Vacation Mode:** Easily pause all bells during specific date ranges (Spring Break, Holidays) without deleting them.
-*   **🗣️ Flexible TTS:** Works with **any** Text-to-Speech engine configured in Home Assistant. Configure global defaults or **override settings per-bell** (Provider, Voice, Language).
-*   **🧪 Instant Testing:** Test any configuration immediately with a "Test" button before saving.
-*   **💻 Native UI Panel:** Includes a dedicated sidebar panel for easy management—no YAML editing required!
+*   **📢 Multi-Speaker Support:** Targeted announcements to specific media players (Sonos, Google Cast, Alexa via Nabu Casa, etc.) with search filtering.
+*   **🎵 Pre-announcement Sounds:** Play a chime or sound file before the TTS message.
+*   **🌴 Vacation Mode:** Easily pause all bells during specific date ranges (Spring Break, Holidays).
+*   **🗣️ Advanced TTS:** Works with **any** Home Assistant TTS engine. Configure global defaults or **override per-bell** (Provider, Voice, Language).
+*   **🧪 Instant Testing:** Test any configuration immediately with a "Test" button.
+*   **🌍 Localized UI:** Available in English, Spanish, and French.
+*   **💻 Native UI Panel:**
+    *   Dedicated sidebar panel (no YAML!).
+    *   Responsive grid layout.
+    *   Search filter to find bells quickly.
+    *   Optimistic updates for a snappy experience.
 
 ## Installation 🛠️
 

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Family Bell Screenshot Harness</title>
+    <style>
+        body { margin: 0; background-color: var(--primary-background-color, #fafafa); font-family: Roboto, sans-serif; }
+        /* Mock HA Theme variables */
+        :root {
+            --primary-color: #03a9f4;
+            --text-primary-color: #ffffff;
+            --primary-background-color: #fafafa;
+            --secondary-background-color: #ffffff;
+            --primary-text-color: #212121;
+            --secondary-text-color: #727272;
+            --divider-color: #e0e0e0;
+            --card-background-color: #ffffff;
+            --paper-font-body1_-_font-family: Roboto, sans-serif;
+            --ha-card-box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 1px 5px 0 rgba(0,0,0,0.12), 0 3px 1px -2px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <family-bell id="panel"></family-bell>
+
+    <script type="module">
+        import { FamilyBellPanel } from "../custom_components/family_bell/www/family_bell_panel.js";
+
+        const panel = document.getElementById('panel');
+
+        // Mock Hass Object
+        const mockHass = {
+            language: 'en',
+            locale: { language: 'en' },
+            callWS: (msg) => {
+                console.log("Mock CallWS", msg);
+                if (msg.type === 'family_bell/get_data') {
+                    return Promise.resolve({
+                        bells: [
+                            {
+                                id: '1',
+                                time: '07:00',
+                                message: 'Good morning! Time to wake up.',
+                                days: ['mon', 'tue', 'wed', 'thu', 'fri'],
+                                speakers: ['media_player.kitchen', 'media_player.kids_room'],
+                                tts_provider: 'cloud',
+                                tts_voice: 'en-US-Standard-C',
+                                tts_language: 'en-US',
+                                sound: null,
+                                enabled: true
+                            },
+                             {
+                                id: '2',
+                                time: '07:45',
+                                message: 'Bus is coming in 15 minutes!',
+                                days: ['mon', 'tue', 'wed', 'thu', 'fri'],
+                                speakers: ['media_player.kitchen'],
+                                tts_provider: null,
+                                tts_voice: null,
+                                tts_language: null,
+                                sound: null,
+                                enabled: true
+                            },
+                            {
+                                id: '3',
+                                time: '18:00',
+                                message: 'Dinner time!',
+                                days: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+                                speakers: ['media_player.kitchen', 'media_player.living_room'],
+                                tts_provider: null,
+                                tts_voice: null,
+                                tts_language: null,
+                                sound: 'media-source://radio_browser/uuid',
+                                enabled: true
+                            }
+                        ],
+                        vacation: {
+                            enabled: false,
+                            ranges: [
+                                { start: '2023-12-20', end: '2024-01-05' }
+                            ]
+                        },
+                        version: '1.0.0',
+                        global_tts: { provider: 'cloud', voice: 'en-US-Standard-A', language: 'en-US' },
+                        last_defaults: null
+                    });
+                }
+                 if (msg.type === 'tts/voices') {
+                    return Promise.resolve({
+                        voices: []
+                    });
+                 }
+                return Promise.resolve({});
+            },
+            states: {
+                "media_player.kitchen": { attributes: { friendly_name: "Kitchen Speaker" } },
+                "media_player.bedroom": { attributes: { friendly_name: "Bedroom Speaker" } },
+                "media_player.kids_room": { attributes: { friendly_name: "Kids Room" } },
+                "media_player.living_room": { attributes: { friendly_name: "Living Room" } }
+            }
+        };
+
+        panel.hass = mockHass;
+    </script>
+</body>
+</html>
