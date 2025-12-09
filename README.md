@@ -3,6 +3,7 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=brewmarsh&repository=family-bell&category=integration)
 [![GitHub Release](https://img.shields.io/github/release/brewmarsh/family-bell.svg)](https://github.com/brewmarsh/family-bell/releases)
 [![License](https://img.shields.io/github/license/brewmarsh/family-bell.svg)](LICENSE)
+
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=brewmarsh&repository=family-bell&category=integration)
 
 **Family Bell** is a custom integration that brings the functionality of Google's "Family Bell" directly into Home Assistant. It allows you to schedule recurring announcements on your smart speakers without relying on cloud schedules or specific hardware ecosystems.
