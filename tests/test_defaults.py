@@ -1,11 +1,14 @@
 import pytest
-from unittest.mock import patch, MagicMock
-from homeassistant.const import CONF_PLATFORM
+from unittest.mock import patch
 from homeassistant.setup import async_setup_component
-from homeassistant.components import websocket_api
-from pytest_homeassistant_custom_component.common import MockConfigEntry, async_mock_service
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.family_bell.const import DOMAIN
+
+# Mock hass_nabucasa to avoid 'josepy' dependency issues in some test environments
+import sys
+from unittest.mock import MagicMock
+sys.modules["hass_nabucasa"] = MagicMock()
 
 @pytest.fixture
 def mock_storage():
