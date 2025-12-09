@@ -9,9 +9,11 @@ from playwright.sync_api import sync_playwright
 PORT = 8000
 DIRECTORY = "."
 
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=DIRECTORY, **kwargs)
+
 
 def start_server():
     # Allow reuse address to avoid port conflict if ran quickly again
@@ -19,6 +21,7 @@ def start_server():
     with socketserver.TCPServer(("", PORT), Handler) as httpd:
         print(f"Serving at port {PORT}")
         httpd.serve_forever()
+
 
 def take_screenshot():
     with sync_playwright() as p:
@@ -35,7 +38,9 @@ def take_screenshot():
             page.wait_for_selector("family-bell >> h1", timeout=10000)
 
             # Wait for bells to populate. We look for the bell-grid.
-            page.wait_for_selector("family-bell >> .bell-grid bell-card", timeout=5000)
+            page.wait_for_selector(
+                "family-bell >> .bell-grid bell-card", timeout=5000
+            )
 
             # Additional small sleep to ensure fonts/icons load or layout settles
             time.sleep(0.5)
@@ -56,6 +61,7 @@ def take_screenshot():
             sys.exit(1)
         finally:
             browser.close()
+
 
 if __name__ == "__main__":
     # Start server in background thread
