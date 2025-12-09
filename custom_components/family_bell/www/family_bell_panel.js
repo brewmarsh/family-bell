@@ -23,6 +23,7 @@ export class FamilyBellPanel extends LitElement {
       _newSound: { type: Object }, // Can be String or Object
       _newSoundEnabled: { type: Boolean },
       _globalTTS: { type: Object },
+      _lastDefaults: { type: Object },
       _version: { type: String },
       _editingBellId: { type: String },
       _speakerFilter: { type: String },
@@ -39,6 +40,7 @@ export class FamilyBellPanel extends LitElement {
     this._newSound = "";
     this._newSoundEnabled = false;
     this._globalTTS = {};
+    this._lastDefaults = null;
     this._version = "unknown";
     this._editingBellId = null;
     this._speakerFilter = "";
@@ -78,11 +80,19 @@ export class FamilyBellPanel extends LitElement {
       }
       if (data.global_tts) {
         this._globalTTS = data.global_tts;
-        // Set default for new bell if not set
-        if (!this._newTTS.provider && !this._editingBellId) {
-           this._newTTS = { ...data.global_tts };
-        }
       }
+      if (data.last_defaults) {
+        this._lastDefaults = data.last_defaults;
+      }
+
+      // Set default for new bell if not set
+      if (!this._newTTS.provider && !this._editingBellId) {
+          const defaults = this._lastDefaults || this._globalTTS;
+          if (defaults && (defaults.provider || defaults.voice)) {
+               this._newTTS = { ...defaults };
+          }
+      }
+
       this.requestUpdate();
     }).catch(err => {
         console.error("Family Bell: Error fetching data", err);
@@ -392,6 +402,12 @@ export class FamilyBellPanel extends LitElement {
     };
 
     this.hass.callWS({ type: "family_bell/update_bell", bell: newBell }).then(() => {
+      // Update last defaults locally to ensure immediate UI feedback
+      this._lastDefaults = {
+        provider: this._newTTS.provider,
+        voice: this._newTTS.voice,
+        language: this._newTTS.language
+      };
       this.fetchData();
       this.resetForm();
     });
@@ -505,7 +521,10 @@ export class FamilyBellPanel extends LitElement {
       this.shadowRoot.getElementById("newTime").value = "";
       this._newDays = [];
       this._newSpeakers = [];
-      this._newTTS = { ...this._globalTTS };
+
+      const defaults = this._lastDefaults || this._globalTTS;
+      this._newTTS = defaults ? { ...defaults } : { provider: "", voice: "", language: "" };
+
       this._newSound = "";
       this._newSoundEnabled = false;
       this._speakerFilter = "";

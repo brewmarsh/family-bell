@@ -1,0 +1,47 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <script type="module">
+                import { FamilyBellPanel } from './family_bell_panel.js';
+
+                const mockHass = {
+                    states: {
+                        "media_player.kitchen": {
+                            attributes: { friendly_name: "Kitchen Speaker" }
+                        },
+                        "tts.google": {
+                            attributes: { friendly_name: "Google TTS", supported_languages: ["en", "es"] }
+                        },
+                        "tts.piper": {
+                             attributes: { friendly_name: "Piper", supported_languages: ["en"] }
+                        }
+                    },
+                    callWS: async (msg) => {
+                        console.log("WS Call:", msg);
+                        if (msg.type === "family_bell/get_data") {
+                            return {
+                                bells: [],
+                                vacation: { enabled: false },
+                                global_tts: { provider: "tts.google", language: "en" },
+                                last_defaults: { provider: "tts.piper", voice: "en_voice_1", language: "en" }
+                            };
+                        }
+                        if (msg.type === "tts/voices") {
+                            if (msg.engine_id === "tts.piper") {
+                                return { voices: [{ voice_id: "en_voice_1", name: "Voice 1", language: "en" }] };
+                            }
+                            return { voices: [] };
+                        }
+                        return {};
+                    }
+                };
+
+                const panel = document.createElement('family-bell');
+                panel.hass = mockHass;
+                document.body.appendChild(panel);
+            </script>
+        </head>
+        <body>
+        </body>
+        </html>

@@ -482,6 +482,13 @@ async def ws_update_bell(hass, connection, msg):
     else:
         bells.append(new_bell)
 
+    # Update last defaults
+    hass.data[DOMAIN]["data"]["last_defaults"] = {
+        "provider": new_bell.get("tts_provider"),
+        "voice": new_bell.get("tts_voice"),
+        "language": new_bell.get("tts_language"),
+    }
+
     await save_data(hass)
     connection.send_result(msg["id"], {"success": True})
 
