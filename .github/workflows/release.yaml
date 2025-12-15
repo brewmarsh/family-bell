@@ -44,7 +44,7 @@ jobs:
           jq --arg new_version "${{ steps.version.outputs.new_version }}" '.version = $new_version' custom_components/family_bell/manifest.json > tmp.json && mv tmp.json custom_components/family_bell/manifest.json
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore: Bump version to ${{ steps.version.outputs.new_version }}"
