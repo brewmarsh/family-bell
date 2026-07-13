@@ -48,7 +48,7 @@ jobs:
       # is expected to fix the issues in the next run (self-correction).
       - name: Checkout agent's branch
         if: success() && steps.jules.outputs.branch_name != ''
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ steps.jules.outputs.branch_name }}
 
